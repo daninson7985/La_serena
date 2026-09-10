@@ -1,11 +1,11 @@
-# 📖 Ejemplo Completo del Flujo de Trabajo Diario
+#  Ejemplo Completo del Flujo de Trabajo Diario
 
 ## Escenario
 **Matías** está tomando el ticket **MLS-3: CRUD de Empleados** para implementar la gestión de empleados en la plataforma de la Municipalidad de La Serena.
 
 ---
 
-## 🎯 Fase 1: Registrar la tarea en Jira
+## Fase 1: Registrar la tarea en Jira
 
 ### 1. Matías abre el tablero Jira
 - Accede a su tablero Jira
@@ -19,7 +19,7 @@
 
 ---
 
-## 💻 Fase 2: Preparar el Entorno Local
+## Fase 2: Preparar el Entorno Local
 
 Matías abre **PowerShell** en VS Code (Terminal > New Terminal) o en su línea de comandos.
 
@@ -68,7 +68,7 @@ Switched to a new branch 'feature/MLS-3-gestion-empleados'
 
 ---
 
-## 🛠️ Fase 3: Desarrollar la Funcionalidad
+## ️ Fase 3: Desarrollar la Funcionalidad
 
 Matías ahora está en su rama personal. Todo lo que haga aquí NO afecta a otros hasta que lo suba.
 
@@ -190,7 +190,7 @@ Esto asegura que cuando Dev 1 o Dev 2 hagan `git pull`, también instalen `pillo
 
 ---
 
-## 📝 Fase 4: Hacer Commits Enlazados
+## Fase 4: Hacer Commits Enlazados
 
 Matías ha completado la funcionalidad. Ahora prepara los cambios para subirlos.
 
@@ -209,7 +209,7 @@ git commit -m "MLS-3: Agrega modelo de empleados y validación de RUT único"
  create mode 100644 empleados/migrations/0001_initial.py
 ```
 
-**Nota:** ✅ El mensaje comienza con `MLS-3:` - esto es OBLIGATORIO
+**Nota:**  El mensaje comienza con `MLS-3:` - esto es OBLIGATORIO
 
 ### Segundo commit: Serializer y vistas
 
@@ -237,7 +237,7 @@ git commit -m "MLS-3: Agregar pillow a dependencias para manejo de imágenes de 
 
 ---
 
-## 🚀 Fase 5: Subir a GitHub
+## Fase 5: Subir a GitHub
 
 Matías sube su rama al repositorio remoto:
 
@@ -262,11 +262,11 @@ To github.com:daninson7985/La_serena.git
  * [new branch]      feature/MLS-3-gestion-empleados -> feature/MLS-3-gestion-empleados
 ```
 
-💡 **Nota:** Si es la primera vez desde su equipo, GitHub abrirá una ventana en el navegador pidiendo autorización. Solo acepta y vuelve a intentar el `git push`.
+ **Nota:** Si es la primera vez desde su equipo, GitHub abrirá una ventana en el navegador pidiendo autorización. Solo acepta y vuelve a intentar el `git push`.
 
 ---
 
-## 📋 Fase 6: Crear un Pull Request (PR) en GitHub
+## Fase 6: Crear un Pull Request (PR) en GitHub
 
 ### 1. Matías va a GitHub
 - URL: https://github.com/daninson7985/La_serena
@@ -285,10 +285,10 @@ To github.com:daninson7985/La_serena.git
 Implementa el CRUD completo de empleados para la plataforma de la Municipalidad.
 
 ## Cambios realizados
-- ✅ Modelo de Empleados con validación de RUT
-- ✅ Serializador para API REST
-- ✅ ViewSet con endpoints de CRUD
-- ✅ Acción personalizada para filtrar empleados activos
+-  Modelo de Empleados con validación de RUT
+-  Serializador para API REST
+-  ViewSet con endpoints de CRUD
+-  Acción personalizada para filtrar empleados activos
 
 ## Archivos modificados
 - empleados/models.py (nuevo)
@@ -322,11 +322,11 @@ MLS-3
 
 ---
 
-## ✅ Fase 7: Revisión y Merge
+## Fase 7: Revisión y Merge
 
 ### Escenario A: Aprobación sin cambios
 1. Dev 1 revisa el código en GitHub
-2. Comenta: "Looks good! ✅"
+2. Comenta: "Looks good! "
 3. Approeba el PR
 4. Haz clic en **"Merge pull request"**
 
@@ -343,11 +343,11 @@ MLS-3
    git push origin feature/MLS-3-gestion-empleados
    ```
 5. El PR se actualiza automáticamente
-6. Comenta: "Cambios realizados ✅"
+6. Comenta: "Cambios realizados "
 
 ---
 
-## 📊 Resumiendo el flujo completo
+## Resumiendo el flujo completo
 
 | Fase | Acción | Comando |
 |------|--------|---------|
@@ -366,16 +366,16 @@ MLS-3
 
 ---
 
-## 🎓 Puntos Clave a Recordar
+## Puntos Clave a Recordar
 
-✅ **SIEMPRE:**
+ **SIEMPRE:**
 - Comienza cada tarea con `git checkout main` + `git pull origin main`
 - Crea una rama nueva con el ID del ticket: `feature/MLS-XX-descripcion`
 - Incluye el ID del ticket en CADA commit: `MLS-3: ...`
 - Haz commits pequeños y frecuentes
 - Sube a GitHub regularmente con `git push origin`
 
-❌ **NUNCA:**
+ **NUNCA:**
 - Programes directamente en `main`
 - Hagas commits sin el ID del ticket
 - Olvides hacer `git pull` antes de empezar
@@ -412,4 +412,4 @@ git pull origin main
 
 ---
 
-**¡Felicidades! Ya entiendes el flujo completo del equipo.** 🎉
+**¡Felicidades! Ya entiendes el flujo completo del equipo.** 

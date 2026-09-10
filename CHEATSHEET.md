@@ -1,10 +1,10 @@
-# 📋 CHEATSHEET - Comandos y Buenas Prácticas Rápidas
+#  CHEATSHEET - Comandos y Buenas Prácticas Rápidas
 
 **Referencia rápida para el equipo de desarrollo.** Copiar y pegar cuando sea necesario.
 
 ---
 
-## 🚀 Comandos Esenciales de Git
+## Comandos Esenciales de Git
 
 ### Primeras Veces (Setup Inicial)
 
@@ -115,7 +115,7 @@ git blame archivo.py
 
 ---
 
-## 🐍 Comandos Django Esenciales
+## Comandos Django Esenciales
 
 ### Setup Inicial
 
@@ -188,7 +188,7 @@ python manage.py shell
 
 ---
 
-## 📦 Pip: Gestión de Dependencias
+## Pip: Gestión de Dependencias
 
 ```powershell
 # Instalar librería
@@ -215,7 +215,7 @@ pip search nombre-libreria
 
 ---
 
-## 🧪 Testing: Quick Reference
+## Testing: Quick Reference
 
 ### Estructura Básica
 
@@ -283,7 +283,7 @@ self.assertIsNotNone(x)
 
 ---
 
-## 🔐 Variables de Entorno (.env)
+## Variables de Entorno (.env)
 
 ### Crear .env
 
@@ -321,9 +321,9 @@ pip freeze > requirements.txt
 
 ---
 
-## 💬 Mensajes de Commit: Formato Obligatorio
+## Mensajes de Commit: Formato Obligatorio
 
-### ✅ CORRECTO
+### CORRECTO
 
 ```
 MLS-3: Agrega modelo de Empleados
@@ -332,7 +332,7 @@ MLS-5: Crear validaciones de RUT
 MLS-7: Agregar tests unitarios para CRUD
 ```
 
-### ❌ INCORRECTO
+### INCORRECTO
 
 ```
 cambios
@@ -355,7 +355,7 @@ Ejemplo: MLS-3: Agrega modelo de Empleados
 
 ---
 
-## 📂 Estructura de Carpetas Recomendada
+## Estructura de Carpetas Recomendada
 
 ```
 La_serena/
@@ -416,7 +416,7 @@ La_serena/
 
 ---
 
-## 🔄 Flujo Completo de Una Tarea (De Punta a Punta)
+## Flujo Completo de Una Tarea (De Punta a Punta)
 
 ```powershell
 # 1. JIRA: Mover ticket a "In Progress"
@@ -466,7 +466,7 @@ git branch -d feature/MLS-3-gestion-empleados
 
 ---
 
-## 🛑 Checklist Antes de Hacer Push
+## Checklist Antes de Hacer Push
 
 - [ ] Incluye ID de Jira en cada commit: `MLS-XX:`
 - [ ] Tests ejecutados: `python manage.py test` (sin errores)
@@ -534,7 +534,7 @@ git push origin feature/MLS-3-descripcion --force
 
 ---
 
-## 📊 Matriz de Decisión Rápida
+## Matriz de Decisión Rápida
 
 | Pregunta | Respuesta | Comando |
 |----------|-----------|---------|
@@ -549,7 +549,7 @@ git push origin feature/MLS-3-descripcion --force
 
 ---
 
-## 📚 Documentación Completa
+## Documentación Completa
 
 - **Setup inicial:** [SETUP-JIRA-GITHUB.md](SETUP-JIRA-GITHUB.md)
 - **Onboarding:** [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -561,16 +561,16 @@ git push origin feature/MLS-3-descripcion --force
 
 ---
 
-## 🎯 Pro Tips
+## Pro Tips
 
-✅ **SIEMPRE:**
+ **SIEMPRE:**
 - Commit pequeños y frecuentes
 - Include ID de Jira
 - Tests antes de push
 - Actualiza requirements.txt
 - Revisa `git status` antes de commitar
 
-❌ **NUNCA:**
+ **NUNCA:**
 - Commiteá en main directamente
 - Subas .env a git
 - Ignores tests que fallan
@@ -579,4 +579,4 @@ git push origin feature/MLS-3-descripcion --force
 
 ---
 
-**¡Referencia rápida actualizada!** 🚀
+**¡Referencia rápida actualizada!** 

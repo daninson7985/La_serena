@@ -1,10 +1,10 @@
-# 🔍 Guía: Pull Requests y Revisión de Código
+#  Guía: Pull Requests y Revisión de Código
 
 Este documento detalla el proceso completo de crear un Pull Request (PR), revisarlo como administrador del proyecto, hacer merge y limpiar el repositorio.
 
 ---
 
-## 🎯 Escenario
+## Escenario
 
 **Matías** ha terminado de desarrollar el ticket **MLS-3: CRUD de Empleados**, ha hecho commits con el ID de Jira, y ha ejecutado `git push origin feature/MLS-3-gestion-empleados`.
 
@@ -12,7 +12,7 @@ Ahora debe crear un PR para que tú (como administrador) revises y apruebes el c
 
 ---
 
-## 📋 Paso 1: Crear el Pull Request en GitHub
+## Paso 1: Crear el Pull Request en GitHub
 
 ### 1.1 Ir a GitHub
 Matías abre su navegador y va a:
@@ -49,11 +49,11 @@ MLS-3: Agrega modelo de empleados y validación de RUT único
 Implementa la funcionalidad completa del CRUD de empleados para la plataforma SGR.
 
 ## Cambios realizados
-- ✅ Modelo de Empleados con validación de RUT (formato XX.XXX.XXX-X)
-- ✅ Serializador REST para API
-- ✅ ViewSet con endpoints CRUD completos
-- ✅ Acción personalizada para filtrar empleados activos
-- ✅ Tests unitarios para validaciones
+-  Modelo de Empleados con validación de RUT (formato XX.XXX.XXX-X)
+-  Serializador REST para API
+-  ViewSet con endpoints CRUD completos
+-  Acción personalizada para filtrar empleados activos
+-  Tests unitarios para validaciones
 
 ## Archivos modificados
 - `empleados/models.py` (nuevo)
@@ -91,13 +91,13 @@ Matías hace clic en el botón verde **"Create pull request"**
 
 **Confirmación:**
 ```
-✅ Pull request #5 created successfully
+ Pull request #5 created successfully
 Feature branch 'feature/MLS-3-gestion-empleados' into main
 ```
 
 ---
 
-## 👨‍💼 Paso 2: Tu Rol - Revisión de Código
+## Paso 2: Tu Rol - Revisión de Código
 
 Recibes la notificación de que Matías solicitó tu revisión. Abres GitHub.
 
@@ -139,35 +139,35 @@ empleados/models.py
 
 Verifica estos puntos antes de aprobar:
 
-#### Seguridad 🔒
+#### Seguridad 
 - [ ] No hay contraseñas, API keys, o tokens expuestos
 - [ ] No hay datos sensibles en comentarios o logs
 - [ ] Las validaciones de entrada son correctas (ej. RUT)
 - [ ] Las consultas a BD no tienen inyección SQL
 
-#### Calidad de Código 📝
+#### Calidad de Código 
 - [ ] El código sigue la nomenclatura del proyecto
 - [ ] Las funciones tienen nombres descriptivos
 - [ ] No hay código duplicado
 - [ ] Los modelos tienen `__str__()` y `class Meta`
 
-#### Dependencias 📦
+#### Dependencias 
 - [ ] Si instalaron librerías, `requirements.txt` está actualizado
 - [ ] Las versiones son compatibles con el resto del proyecto
 - [ ] No hay dependencias innecesarias
 
-#### Estándares del Proyecto SGR 🏛️
+#### Estándares del Proyecto SGR ️
 - [ ] Sigue las reglas de la Municipalidad de La Serena
 - [ ] Las validaciones de RUT son correctas
 - [ ] Los permisos/roles están implementados
 - [ ] Los datos municipales están protegidos
 
-#### Tests 🧪
+#### Tests 
 - [ ] Hay tests unitarios para funciones críticas
 - [ ] Los tests comprueban casos límite (RUT inválido, etc.)
 - [ ] No hay tests que fallen
 
-### 2.4 Si Todo Está Bien ✅
+### 2.4 Si Todo Está Bien 
 
 Haces clic en el botón **"Review changes"** (parte superior derecha):
 
@@ -180,20 +180,20 @@ Seleccionas:
 - **Comentario (opcional):** 
   ```
   Great work! Todo se ve correcto. 
-  ✅ Seguridad verificada
-  ✅ requirements.txt actualizado
-  ✅ Validaciones de RUT implementadas correctamente
-  ✅ El equipo puede integrar
+   Seguridad verificada
+   requirements.txt actualizado
+   Validaciones de RUT implementadas correctamente
+   El equipo puede integrar
   ```
 
 Haces clic en **"Submit review"**
 
 **Resultado:**
 ```
-✅ Approved by daninson7985
+ Approved by daninson7985
 ```
 
-### 2.5 Si Hay Errores o Cambios Necesarios ❌
+### 2.5 Si Hay Errores o Cambios Necesarios 
 
 Mientras revisas, si ves algo que mejorar, haces clic en la línea para dejar un comentario:
 
@@ -202,7 +202,7 @@ Mientras revisas, si ves algo que mejorar, haces clic en la línea para dejar un
 Línea 15 (en models.py):
 rut = models.CharField(max_length=12, unique=True, ...)
 
-💬 Comentario: 
+ Comentario: 
 ¿Validaste que este regex funciona con RUTs que tienen puntos y guión? 
 Por ejemplo: 12.345.678-9
 
@@ -215,7 +215,7 @@ Luego haces clic en **"Review changes"** y seleccionas:
 
 **Resultado:**
 ```
-⏳ Changes requested by daninson7985
+ Changes requested by daninson7985
 ```
 
 Matías verá tu comentario, hará los cambios en su rama local, y ejecutará:
@@ -230,9 +230,9 @@ El PR se actualiza automáticamente. Revisas de nuevo y si todo está bien, apru
 
 ---
 
-## ✅ Paso 3: Hacer el Merge hacia `main`
+## Paso 3: Hacer el Merge hacia `main`
 
-Una vez que el PR está **Approved** ✅:
+Una vez que el PR está **Approved** :
 
 ### 3.1 Hacer merge
 
@@ -261,12 +261,12 @@ Haces clic en **"Confirm merge"**
 GitHub muestra:
 
 ```
-✅ Pull request successfully merged and closed
+ Pull request successfully merged and closed
 You can now safely delete the 'feature/MLS-3-gestion-empleados' branch.
 [Delete branch]
 ```
 
-### 3.4 Integración con Jira 🎯
+### 3.4 Integración con Jira 
 
 **Magia automática:**
 
@@ -275,8 +275,8 @@ Gracias a que tu commits incluyen `MLS-3:` en el mensaje, GitHub y Jira están c
 En tu tablero Jira, el ticket **MLS-3: CRUD de Empleados** cambia automáticamente:
 
 ```
-📍 Columna anterior: In Progress
-📍 Columna nueva: Done ✅
+ Columna anterior: In Progress
+ Columna nueva: Done 
 
 El ticket tiene un comentario automático:
 "Commit(s) incluido en main:
@@ -289,7 +289,7 @@ El equipo en Jira ve que tu trabajo está completado y listo en producción.
 
 ---
 
-## 🧹 Paso 4: Sincronizar y Limpiar (Todo el Equipo)
+## Paso 4: Sincronizar y Limpiar (Todo el Equipo)
 
 Después de que el merge está hecho, **todos** en el equipo (incluyendo a Matías) deben sincronizar sus repositorios locales y eliminar ramas viejas.
 
@@ -353,11 +353,11 @@ git branch -a
   remotes/origin/main
 ```
 
-Solo `main` debe estar visible. Las ramas de trabajo ya fueron eliminadas. ✅
+Solo `main` debe estar visible. Las ramas de trabajo ya fueron eliminadas. 
 
 ---
 
-## 📊 Flujo Completo Resumido
+## Flujo Completo Resumido
 
 | Persona | Acción | Comando/Donde |
 |---------|--------|---------------|
@@ -375,7 +375,7 @@ Solo `main` debe estar visible. Las ramas de trabajo ya fueron eliminadas. ✅
 
 ---
 
-## 🚨 Errores Comunes
+## Errores Comunes
 
 ### Error: "This branch has conflicts that must be resolved"
 
@@ -413,7 +413,7 @@ git branch -a
 
 ---
 
-## ✅ Checklist Final
+## Checklist Final
 
 Después de completar todo el ciclo:
 
@@ -430,15 +430,15 @@ Después de completar todo el ciclo:
 
 ---
 
-## 💡 Pro Tips
+## Pro Tips
 
-✅ **Siempre:**
+ **Siempre:**
 - Incluye el ID de Jira en el título del PR
 - Solicita revisión a alguien del equipo
 - Actualiza requirements.txt si instales librerías
 - Limpia ramas después de merge
 
-❌ **Nunca:**
+ **Nunca:**
 - Hagas merge a ti mismo sin que alguien revise
 - Olvides eliminar ramas antiguas
 - Dejes ramas sin mergear por mucho tiempo
@@ -446,4 +446,4 @@ Después de completar todo el ciclo:
 
 ---
 
-**¡Felicidades! Completaste el ciclo completo de desarrollo.** 🎉
+**¡Felicidades! Completaste el ciclo completo de desarrollo.** 

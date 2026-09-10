@@ -1,23 +1,23 @@
-# 🚀 Fase 1: Setup de Jira y GitHub - Infraestructura del Proyecto
+# Fase 1: Setup de Jira y GitHub - Infraestructura del Proyecto
 
 Esta guía cubre la configuración inicial de Jira y GitHub para que el equipo pueda comenzar a colaborar en el proyecto SGR.
 
 ---
 
-## 📋 Resumen
+## Resumen
 
 Antes de escribir código, necesitas:
-1. ✅ Crear un proyecto en Jira
-2. ✅ Crear un repositorio en GitHub
-3. ✅ Integrar Jira con GitHub
-4. ✅ Agregar miembros del equipo
-5. ✅ Configurar tableros y columnas
+1. Crear un proyecto en Jira
+2. Crear un repositorio en GitHub
+3. Integrar Jira con GitHub
+4. Agregar miembros del equipo
+5. Configurar tableros y columnas
 
 **Tiempo estimado:** 30 minutos
 
 ---
 
-## 🎯 Paso 1: Crear Proyecto en Jira
+## Paso 1: Crear Proyecto en Jira
 
 ### 1.1 Acceder a Jira
 
@@ -57,7 +57,7 @@ Jira crea un tablero por defecto con columnas:
 - **In Progress** (en desarrollo)
 - **Done** (completadas)
 
-✅ Esto está bien. Si quieres añadir más columnas:
+ Esto está bien. Si quieres añadir más columnas:
 
 1. Ve a **Board Settings** (engranaje en esquina superior derecha)
 2. Click en **Columns**
@@ -70,7 +70,7 @@ Backlog → To Do → In Progress → In Review → Done
 
 ---
 
-## 👥 Paso 2: Agregar Miembros del Equipo en Jira
+## Paso 2: Agregar Miembros del Equipo en Jira
 
 ### 2.1 Invitar al Equipo
 
@@ -92,7 +92,7 @@ Dev 3:             Developer
 
 ---
 
-## 🔗 Paso 3: Crear Repositorio en GitHub
+## Paso 3: Crear Repositorio en GitHub
 
 ### 3.1 Crear un Nuevo Repositorio
 
@@ -106,7 +106,7 @@ Dev 3:             Developer
 Repository name:  La_serena
 Description:      Sistema de Gestión de Recursos - Municipalidad
 Visibility:       Private (o Public si es académico)
-Initialize:       ❌ NO inicialices (lo haremos nosotros)
+Initialize:        NO inicialices (lo haremos nosotros)
 ```
 
 **Haz clic en "Create repository"**
@@ -128,7 +128,7 @@ https://github.com/daninson7985/La_serena
 
 ---
 
-## 🔌 Paso 4: Integrar Jira con GitHub
+## Paso 4: Integrar Jira con GitHub
 
 Esta es la **parte más importante**: permite que commits y PRs se vinculen automáticamente a tickets.
 
@@ -169,12 +169,12 @@ git push origin main
 
 En Jira → MLS-1, aparecerá:
 ```
-✅ Commit: "MLS-1: Configuración inicial del proyecto"
+ Commit: "MLS-1: Configuración inicial del proyecto"
 ```
 
 ---
 
-## 📊 Paso 5: Crear el Backlog Inicial
+## Paso 5: Crear el Backlog Inicial
 
 ### 5.1 Crear Épicas (Historias Grandes)
 
@@ -234,7 +234,7 @@ Assignee: Matías
 
 ---
 
-## 🔑 Paso 6: Flujo de Trabajo Inicial
+## Paso 6: Flujo de Trabajo Inicial
 
 ### 6.1 Primer Commit y Setup (Dev 1)
 
@@ -265,14 +265,14 @@ En Jira:
 1. Ve al ticket **MLS-1**
 2. Deberías ver:
    ```
-   ✅ Commit: "MLS-1: Configuración inicial del proyecto Django"
+    Commit: "MLS-1: Configuración inicial del proyecto Django"
    ```
 
-Si lo ves, ¡la integración funciona! 🎉
+Si lo ves, ¡la integración funciona! 
 
 ---
 
-## ✅ Checklist de Configuración Completada
+## Checklist de Configuración Completada
 
 - [ ] Proyecto creado en Jira (clave: MLS)
 - [ ] Repositorio creado en GitHub (La_serena)
@@ -287,7 +287,7 @@ Si lo ves, ¡la integración funciona! 🎉
 
 ---
 
-## 📝 Crear README.md en GitHub
+## Crear README.md en GitHub
 
 Crea un archivo `README.md` en la raíz del proyecto:
 
@@ -296,7 +296,7 @@ Crea un archivo `README.md` en la raíz del proyecto:
 
 Plataforma web para la gestión de recursos municipales, actividades y monitoreo de metas.
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 ### Requisitos
 - Python 3.8+
@@ -335,7 +335,7 @@ Plataforma web para la gestión de recursos municipales, actividades y monitoreo
 
 6. Abrir en navegador: http://127.0.0.1:8000/
 
-## 📚 Documentación
+## Documentación
 
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guía de configuración
 - **[WORKFLOW-EXAMPLE.md](WORKFLOW-EXAMPLE.md)** - Ejemplo de flujo de trabajo
@@ -345,18 +345,18 @@ Plataforma web para la gestión de recursos municipales, actividades y monitoreo
 - **[TRACEABILITY-MATRIX.md](TRACEABILITY-MATRIX.md)** - Matriz de trazabilidad
 - **[CHEATSHEET.md](CHEATSHEET.md)** - Comandos rápidos
 
-## 📊 Jira y GitHub
+## Jira y GitHub
 
 - **Proyecto Jira:** [MLS en Jira](https://tu-jira-instance.atlassian.net)
 - **Repositorio:** https://github.com/daninson7985/La_serena
 
-## 👥 Equipo
+## Equipo
 
 - **Dev 1 (Líder):** Tu Nombre
 - **Dev 2:** Matías
 - **Dev 3:** Nombre
 
-## 📋 Stack Tecnológico
+## Stack Tecnológico
 
 - **Backend:** Django 4.x + Python 3.8+
 - **Base de Datos:** SQLite (desarrollo) / PostgreSQL (producción)
@@ -365,7 +365,7 @@ Plataforma web para la gestión de recursos municipales, actividades y monitoreo
 - **Control de Versiones:** Git + GitHub
 - **Gestión:** Jira + GitHub
 
-## 📞 Contacto
+## Contacto
 
 Para preguntas sobre el proyecto, contacta a Dev 1 o abre una issue en GitHub.
 
@@ -376,7 +376,7 @@ Para preguntas sobre el proyecto, contacta a Dev 1 o abre una issue en GitHub.
 
 ---
 
-## 🔒 Seguridad: .gitignore
+## Seguridad: .gitignore
 
 Asegúrate de que tu `.gitignore` incluya:
 
@@ -418,21 +418,21 @@ credentials.json
 
 ---
 
-## 🎓 Resumen de Fase 1
+## Resumen de Fase 1
 
 | Tarea | Estado | Verificación |
 |-------|--------|-------------|
-| Proyecto Jira creado | ✅ | Acceso a tablero |
-| Repositorio GitHub creado | ✅ | URL funciona |
-| Equipo agregado a Jira | ✅ | Miembros visibles |
-| Equipo agregado a GitHub | ✅ | Collaborators visibles |
-| Integración Jira-GitHub | ✅ | Commit visible en ticket |
-| Backlog inicial | ✅ | Al menos 5 tickets |
-| README.md | ✅ | Archivo en repositorio |
-| .gitignore | ✅ | Archivo en repositorio |
+| Proyecto Jira creado |  | Acceso a tablero |
+| Repositorio GitHub creado |  | URL funciona |
+| Equipo agregado a Jira |  | Miembros visibles |
+| Equipo agregado a GitHub |  | Collaborators visibles |
+| Integración Jira-GitHub |  | Commit visible en ticket |
+| Backlog inicial |  | Al menos 5 tickets |
+| README.md |  | Archivo en repositorio |
+| .gitignore |  | Archivo en repositorio |
 
 ---
 
-**¡Fase 1 completada! El equipo está listo para comenzar el desarrollo.** 🚀
+**¡Fase 1 completada! El equipo está listo para comenzar el desarrollo.** 
 
 Próximo paso: Leer [CONTRIBUTING.md](CONTRIBUTING.md) para la configuración inicial del código.

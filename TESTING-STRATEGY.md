@@ -1,10 +1,10 @@
-# 🧪 Estrategia de Pruebas - Proyecto SGR La Serena
+#  Estrategia de Pruebas - Proyecto SGR La Serena
 
 Este documento establece la **estrategia mínima obligatoria de pruebas** que todo código debe pasar antes de ser mergeado a `main`.
 
 ---
 
-## 📋 Resumen Ejecutivo
+## Resumen Ejecutivo
 
 Cada historia de usuario debe validarse a través de **3 niveles de pruebas**:
 
@@ -13,14 +13,14 @@ Cada historia de usuario debe validarse a través de **3 niveles de pruebas**:
 3. **Pruebas de Aceptación** - Criterios de la HU (Given/When/Then)
 
 Además, se debe auditar:
-- ✅ Gestión de secretos (sin credenciales en git)
-- ✅ Control de acceso por servidor
-- ✅ Validación de entradas
-- ✅ Cobertura mínima de 70% en funciones críticas
+-  Gestión de secretos (sin credenciales en git)
+-  Control de acceso por servidor
+-  Validación de entradas
+-  Cobertura mínima de 70% en funciones críticas
 
 ---
 
-## 🎯 Nivel 1: Pruebas Unitarias
+## Nivel 1: Pruebas Unitarias
 
 ### Definición
 Verifican que las funciones individuales, cálculos y reglas de negocio funcionan correctamente de forma **aislada**, sin dependencias externas.
@@ -192,7 +192,7 @@ coverage html  # Abre htmlcov/index.html en el navegador
 
 ---
 
-## 🔗 Nivel 2: Pruebas de Integración
+## Nivel 2: Pruebas de Integración
 
 ### Definición
 Verifican que el **sistema completo funciona integrado**: base de datos, migraciones, APIs, conectores externos.
@@ -354,7 +354,7 @@ class TestAPIEmpleados(TestCase):
 
 ---
 
-## ✅ Nivel 3: Pruebas de Aceptación
+## Nivel 3: Pruebas de Aceptación
 
 ### Definición
 Validan que la historia de usuario **cumple con los criterios descritos en Jira** usando el formato **Given / When / Then** (Dado / Cuando / Entonces).
@@ -505,11 +505,11 @@ class TestRegistroActividadesAceptacion(TestCase):
 
 ---
 
-## 🔐 Auditoría de Seguridad y Calidad
+## Auditoría de Seguridad y Calidad
 
 ### Requisito 1: Gestión de Secretos
 
-**✅ Lo Correcto:**
+** Lo Correcto:**
 ```python
 # settings.py
 from dotenv import load_dotenv
@@ -537,7 +537,7 @@ GOOGLE_DRIVE_API_KEY=tu-api-key
 secrets/
 ```
 
-**❌ Lo Incorrecto:**
+** Lo Incorrecto:**
 ```python
 # ¡NUNCA!
 SECRET_KEY = 'abc123xyz456'  # Expuesto en GitHub
@@ -546,7 +546,7 @@ DATABASE_PASSWORD = 'mi-password-123'  # Visible para todos
 
 ### Requisito 2: Control de Acceso por Servidor
 
-**✅ Validación en Backend (Django):**
+** Validación en Backend (Django):**
 ```python
 # views.py
 from rest_framework.permissions import BasePermission
@@ -577,7 +577,7 @@ class ActividadViewSet(viewsets.ModelViewSet):
         return Response({'status': 'Aprobada'})
 ```
 
-**❌ No Confiar en el Frontend:**
+** No Confiar en el Frontend:**
 ```javascript
 // ¡NUNCA hacer esto!
 if (usuario.rol === 'admin') {
@@ -588,7 +588,7 @@ if (usuario.rol === 'admin') {
 
 ### Requisito 3: Validación de Entradas
 
-**✅ Validación en Models:**
+** Validación en Models:**
 ```python
 # models.py
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -619,7 +619,7 @@ class Actividad(models.Model):
             raise ValidationError("La fecha no puede ser en el futuro")
 ```
 
-**✅ Validación en Serializer:**
+** Validación en Serializer:**
 ```python
 # serializers.py
 from rest_framework import serializers
@@ -653,7 +653,7 @@ class ActividadSerializer(serializers.ModelSerializer):
 
 ---
 
-## 📊 Resumen del Checklist Completo de QA
+## Resumen del Checklist Completo de QA
 
 **Antes de crear el PR:**
 - [ ] Pruebas unitarias ejecutadas: `python manage.py test` (70%+ cobertura)
@@ -668,23 +668,23 @@ class ActividadSerializer(serializers.ModelSerializer):
 - [ ] Se documenta cualquier variable de entorno nueva
 
 **En Revisión de Código (Tu rol):**
-- [ ] ✅ No hay credenciales expuestas
-- [ ] ✅ Permisos validados en backend
-- [ ] ✅ Inputs validados
-- [ ] ✅ Cobertura de tests >= 70%
-- [ ] ✅ `requirements.txt` actualizado
-- [ ] ✅ Migraciones creadas correctamente
-- [ ] ✅ Criterios de aceptación cumplidos
+- [ ]  No hay credenciales expuestas
+- [ ]  Permisos validados en backend
+- [ ]  Inputs validados
+- [ ]  Cobertura de tests >= 70%
+- [ ]  `requirements.txt` actualizado
+- [ ]  Migraciones creadas correctamente
+- [ ]  Criterios de aceptación cumplidos
 
 **Antes de Merge:**
-- [ ] PR aprobado ✅
-- [ ] Tests pasan ✅
-- [ ] Seguridad auditada ✅
-- [ ] Matriz de trazabilidad actualizada ✅
+- [ ] PR aprobado 
+- [ ] Tests pasan 
+- [ ] Seguridad auditada 
+- [ ] Matriz de trazabilidad actualizada 
 
 ---
 
-## 🚀 Ejecutar Todos los Tests
+## Ejecutar Todos los Tests
 
 ```powershell
 # Ejecutar todos los tests con cobertura
@@ -698,7 +698,7 @@ start htmlcov/index.html
 
 ---
 
-## 📞 Preguntas Frecuentes
+## Preguntas Frecuentes
 
 **P: ¿Cuál es la cobertura mínima requerida?**
 R: 70% en funciones críticas (cálculos, validaciones, APIs).
@@ -722,4 +722,4 @@ R: No para MVP. Enfócate en backend (Django tests son suficientes).
 
 ---
 
-**¡La calidad es responsabilidad de todos!** 🏆
+**¡La calidad es responsabilidad de todos!** 

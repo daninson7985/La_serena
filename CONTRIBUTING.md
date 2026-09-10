@@ -4,13 +4,13 @@
 
 ---
 
-## 📋 Fase 1: Configuración Inicial del Proyecto (Dev 1)
+## Fase 1: Configuración Inicial del Proyecto (Dev 1)
 
 El desarrollador principal ya ha inicializado el repositorio y subido el código base a GitHub. Si eres Dev 2 o Dev 3, sigue la **Fase 2** a continuación.
 
 ---
 
-## 🚀 Fase 2: Unirse al Proyecto (Dev 2 y Dev 3)
+## Fase 2: Unirse al Proyecto (Dev 2 y Dev 3)
 
 Sigue estos pasos para configurar tu entorno local:
 
@@ -54,16 +54,16 @@ Deberías ver algo como:
 Starting development server at http://127.0.0.1:8000/
 ```
 
-¡Si ves este mensaje, estás listo para trabajar! 🎉
+¡Si ves este mensaje, estás listo para trabajar! 
 
 ---
 
-## 💼 Fase 3: Flujo de Trabajo Diario
+## Fase 3: Flujo de Trabajo Diario
 
-### ⚠️ REGLA DE ORO
+### ️ REGLA DE ORO
 **NADIE programa directamente en la rama `main`.** La rama `main` solo contiene código probado y funcional.
 
-### 📊 Ciclo de trabajo para cada tarea
+### Ciclo de trabajo para cada tarea
 
 Cada vez que tomes una nueva tarea, sigue estos pasos **en orden estricto**:
 
@@ -110,7 +110,7 @@ La primera vez que hagas `push`, GitHub puede pedirte que autorices la conexión
 
 ---
 
-## 📝 Convenciones de Commit
+## Convenciones de Commit
 
 Sigue estas convenciones para mantener el histórico limpio y legible:
 
@@ -121,13 +121,13 @@ Sigue estas convenciones para mantener el histórico limpio y legible:
   - `SCRUM-7: Implementar vista de listado de productos`
 
 - **Ejemplos inválidos:**
-  - `cambios` ❌
-  - `fix bug` ❌
-  - `actualización` ❌
+  - `cambios` 
+  - `fix bug` 
+  - `actualización` 
 
 ---
 
-## 🔄 Flujo completo de ejemplo
+## Flujo completo de ejemplo
 
 Imaginemos que tomas el ticket **MLS-3: CRUD de Empleados**
 
@@ -187,7 +187,7 @@ git commit -m "MLS-3: Agrega validaciones de datos y manejo de errores"
 git push origin feature/MLS-3-gestion-empleados
 ```
 
-💡 **Nota:** La primera vez, GitHub puede pedirte autorización en el navegador.
+ **Nota:** La primera vez, GitHub puede pedirte autorización en el navegador.
 
 ### 7️⃣ Crear Pull Request (PR)
 - Ve a GitHub
@@ -202,7 +202,7 @@ git push origin feature/MLS-3-gestion-empleados
 
 ---
 
-## 🐛 Solución de problemas comunes
+## Solución de problemas comunes
 
 ### Problema: "fatal: not a git repository"
 **Solución:** Asegúrate de estar en la carpeta del proyecto:
@@ -229,7 +229,7 @@ git checkout -b feature/SCRUM-XX-...
 
 ---
 
-## 📞 Contacto y preguntas
+## Contacto y preguntas
 
 Si tienes dudas sobre:
 - **Configuración:** Consulta a Dev 1
@@ -238,7 +238,7 @@ Si tienes dudas sobre:
 
 ---
 
-## ✅ Checklist inicial
+## Checklist inicial
 
 Antes de tu primer commit, verifica:
 - [ ] Ambiente virtual activado: `(venv)` en la línea de comandos
@@ -249,4 +249,4 @@ Antes de tu primer commit, verifica:
 
 ---
 
-**¡Feliz a codear! 🚀**
+**¡Feliz a codear! **

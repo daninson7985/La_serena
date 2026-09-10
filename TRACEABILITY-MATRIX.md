@@ -1,10 +1,10 @@
-# 📊 Matriz de Trazabilidad - Rastreabilidad de Requisitos
+#  Matriz de Trazabilidad - Rastreabilidad de Requisitos
 
 Este documento establece cómo mantener la **trazabilidad** entre Historias de Usuario, Requisitos Funcionales, Commits y Pruebas en el proyecto SGR.
 
 ---
 
-## 🎯 ¿Qué es la Matriz de Trazabilidad?
+## ¿Qué es la Matriz de Trazabilidad?
 
 La Matriz de Trazabilidad es un documento que **vincula**:
 
@@ -21,14 +21,14 @@ Evidencia de Aprobación (PR approved, merge a main)
 ```
 
 **Beneficios:**
-- ✅ Auditoría académica y profesional
-- ✅ Rastrear qué código implementa cuál requisito
-- ✅ Verificar que todo está testeado
-- ✅ Facilita el debugging (saber por qué existe una línea de código)
+-  Auditoría académica y profesional
+-  Rastrear qué código implementa cuál requisito
+-  Verificar que todo está testeado
+-  Facilita el debugging (saber por qué existe una línea de código)
 
 ---
 
-## 📋 Matriz de Trazabilidad Completa
+## Matriz de Trazabilidad Completa
 
 ### Formato Recomendado
 
@@ -46,14 +46,14 @@ Puedes mantenerla en:
 
 | RF | HU | Descripción | Commits | Tests | PR # | Estado |
 |----|----|-------------|---------|-------|------|--------|
-| RF-001 | MLS-1 | Autenticación de usuarios | MLS-1: Implementar login, MLS-1: Add JWT | test_auth.py (5 tests) | #3 | ✅ Aprobado |
-| RF-002 | MLS-2 | Gestión de roles | MLS-2: Model Role, MLS-2: API Role CRUD | test_roles.py (8 tests) | #5 | ✅ Aprobado |
-| RF-003 | MLS-3 | CRUD de Empleados | MLS-3: Model Employee, MLS-3: Serializer | test_empleados.py (12 tests) | #7 | ✅ Aprobado |
+| RF-001 | MLS-1 | Autenticación de usuarios | MLS-1: Implementar login, MLS-1: Add JWT | test_auth.py (5 tests) | #3 |  Aprobado |
+| RF-002 | MLS-2 | Gestión de roles | MLS-2: Model Role, MLS-2: API Role CRUD | test_roles.py (8 tests) | #5 |  Aprobado |
+| RF-003 | MLS-3 | CRUD de Empleados | MLS-3: Model Employee, MLS-3: Serializer | test_empleados.py (12 tests) | #7 |  Aprobado |
 ```
 
 ---
 
-## 🔍 Ejemplo Detallado: Requisito RF-003
+## Ejemplo Detallado: Requisito RF-003
 
 ### Requisito Funcional
 
@@ -155,57 +155,57 @@ class TestEmpleadoUnitarios(TestCase):
     
     def test_validar_rut_formato_correcto(self):
         """Test RF-003.1: Validar RUT formato XX.XXX.XXX-X"""
-        # ✅ PASA
+        #  PASA
     
     def test_rechazar_rut_incorrecto(self):
         """Test RF-003.1: Rechazar RUT con formato incorrecto"""
-        # ✅ PASA
+        #  PASA
     
     def test_campo_nombre_requerido(self):
         """Test RF-003: Campo nombre es obligatorio"""
-        # ✅ PASA
+        #  PASA
 
 class TestEmpleadoIntegracion(TestCase):
     """Tests de integración con BD"""
     
     def test_crear_empleado_en_bd(self):
         """Test RF-003.2: Crear empleado persiste en BD"""
-        # ✅ PASA
+        #  PASA
     
     def test_rut_unico_en_bd(self):
         """Test RF-003.3: No permitir RUT duplicado"""
-        # ✅ PASA
+        #  PASA
     
     def test_api_crear_empleado(self):
         """Test RF-003.2: API POST /empleados/ crea empleado"""
-        # ✅ PASA (201 Created)
+        #  PASA (201 Created)
     
     def test_api_listar_empleados(self):
         """Test RF-003.2: API GET /empleados/ lista empleados"""
-        # ✅ PASA (200 OK)
+        #  PASA (200 OK)
     
     def test_api_actualizar_empleado(self):
         """Test RF-003.2: API PUT /empleados/{id}/ actualiza"""
-        # ✅ PASA (200 OK)
+        #  PASA (200 OK)
     
     def test_api_eliminar_solo_admin(self):
         """Test RF-003.4: Solo admin puede eliminar"""
-        # ✅ PASA (403 Forbidden para no-admin)
+        #  PASA (403 Forbidden para no-admin)
 
 class TestEmpleadoAceptacion(TestCase):
     """Tests de aceptación según HU-MLS-3"""
     
     def test_aceptacion_crear_empleado_valido(self):
         """AC: Crear empleado con datos válidos"""
-        # ✅ PASA
+        #  PASA
     
     def test_aceptacion_rechazar_empleado_invalido(self):
         """AC: Rechazar datos incompletos"""
-        # ✅ PASA
+        #  PASA
     
     def test_aceptacion_auditar_cambios(self):
         """AC: Registrar cambios en auditoría"""
-        # ✅ PASA
+        #  PASA
 ```
 
 ### Pull Request en GitHub
@@ -219,13 +219,13 @@ Implementa la gestión completa de empleados incluyendo validación de RUT,
 auditoría de cambios y control de acceso.
 
 ## Cambios Realizados
-- ✅ Modelo Employee con validación de RUT
-- ✅ Serializador y ViewSet REST
-- ✅ Tests unitarios (5 tests, 85% cobertura)
-- ✅ Tests de integración (8 tests)
-- ✅ Tests de aceptación (3 tests)
-- ✅ Auditoría de cambios
-- ✅ Documentación de API
+-  Modelo Employee con validación de RUT
+-  Serializador y ViewSet REST
+-  Tests unitarios (5 tests, 85% cobertura)
+-  Tests de integración (8 tests)
+-  Tests de aceptación (3 tests)
+-  Auditoría de cambios
+-  Documentación de API
 
 ## Vinculación
 - Jira: MLS-3
@@ -244,10 +244,10 @@ Coverage: 85%
 ```
 
 ## Revisión de Seguridad
-- ✅ No hay credenciales expuestas
-- ✅ Permisos validados en backend (solo admin puede eliminar)
-- ✅ Inputs validados (RUT, email)
-- ✅ Queries protegidas contra SQL injection
+-  No hay credenciales expuestas
+-  Permisos validados en backend (solo admin puede eliminar)
+-  Inputs validados (RUT, email)
+-  Queries protegidas contra SQL injection
 
 Status: Ready for Review
 ```
@@ -255,12 +255,12 @@ Status: Ready for Review
 ### Aprobación y Merge
 
 ```
-PR #7 Approved by DevLead ✅
+PR #7 Approved by DevLead 
 Merged into main by DevLead
 Commit merged: abc1234...jkl3456
 
 Jira MLS-3 automatically updated:
-- Status: Done ✅
+- Status: Done 
 - Linked PR: #7
 - Commits: 4
 
@@ -273,19 +273,19 @@ Timeline:
 
 ---
 
-## 📊 Matriz de Ejemplo Completa (Simplificada)
+## Matriz de Ejemplo Completa (Simplificada)
 
 | RF | HU | Descripción | Tests | Cobertura | PR | Commits | Estado | Aprobado |
 |----|----|-----------|----|-----------|----|----|--------|----------|
-| RF-001 | MLS-1 | Autenticación | test_auth.py (5) | 80% | #3 | 3 | ✅ Merged | Dev 1 |
-| RF-002 | MLS-2 | Gestión de Roles | test_roles.py (8) | 75% | #5 | 4 | ✅ Merged | Dev 1 |
-| RF-003 | MLS-3 | CRUD Empleados | test_empleados.py (16) | 85% | #7 | 4 | ✅ Merged | Dev 1 |
-| RF-004 | MLS-4 | Registro de Actividades | test_actividades.py (12) | 78% | #9 | 5 | 🔄 En Revisión | Pendiente |
-| RF-005 | MLS-5 | Reportes | test_reportes.py (8) | 70% | #11 | 3 | ⏳ En Desarrollo | No iniciado |
+| RF-001 | MLS-1 | Autenticación | test_auth.py (5) | 80% | #3 | 3 |  Merged | Dev 1 |
+| RF-002 | MLS-2 | Gestión de Roles | test_roles.py (8) | 75% | #5 | 4 |  Merged | Dev 1 |
+| RF-003 | MLS-3 | CRUD Empleados | test_empleados.py (16) | 85% | #7 | 4 |  Merged | Dev 1 |
+| RF-004 | MLS-4 | Registro de Actividades | test_actividades.py (12) | 78% | #9 | 5 |  En Revisión | Pendiente |
+| RF-005 | MLS-5 | Reportes | test_reportes.py (8) | 70% | #11 | 3 |  En Desarrollo | No iniciado |
 
 ---
 
-## 🛠️ Cómo Mantener la Matriz
+## ️ Cómo Mantener la Matriz
 
 ### Opción 1: Google Sheets (Fácil para el equipo)
 
@@ -317,7 +317,7 @@ Crear página en GitHub Wiki: "Traceability Matrix"
 
 ---
 
-## 📝 Template para Cada PR
+## Template para Cada PR
 
 Cuando crees un PR, **siempre incluye** esta sección:
 
@@ -347,7 +347,7 @@ Cuando crees un PR, **siempre incluye** esta sección:
 
 ---
 
-## 🔗 Relación Entre Elementos
+## Relación Entre Elementos
 
 ```
 RF-003 (Requisito)
@@ -365,17 +365,17 @@ RF-003 (Requisito)
 ├── Pull Request #7
 │   ├── Título: MLS-3: Implementar CRUD Empleados
 │   ├── Reviewer: Dev 1
-│   └── Status: Approved ✅
+│   └── Status: Approved 
 │
 └── Merge a Main
     ├── Merged by: Dev 1
     ├── Timestamp: 2024-01-17 14:30
-    └── Jira Status: Done ✅
+    └── Jira Status: Done 
 ```
 
 ---
 
-## 📋 Checklist de Trazabilidad Completo
+## Checklist de Trazabilidad Completo
 
 Antes de hacer merge a `main`:
 
@@ -392,7 +392,7 @@ Antes de hacer merge a `main`:
 
 ---
 
-## 🎓 Ejemplo para Presentación Académica
+## Ejemplo para Presentación Académica
 
 Si necesitas presentar esto en defensa de tesis o proyecto:
 
@@ -405,11 +405,11 @@ Se implementaron 5 requisitos funcionales en el Sprint 1:
 
 | RF | Descripción | Status | Cobertura |
 |----|----|--------|----------|
-| RF-001 | Autenticación | ✅ | 80% |
-| RF-002 | Gestión de Roles | ✅ | 75% |
-| RF-003 | CRUD Empleados | ✅ | 85% |
-| RF-004 | Registro Actividades | 🔄 | 78% |
-| RF-005 | Reportes | ⏳ | N/A |
+| RF-001 | Autenticación |  | 80% |
+| RF-002 | Gestión de Roles |  | 75% |
+| RF-003 | CRUD Empleados |  | 85% |
+| RF-004 | Registro Actividades |  | 78% |
+| RF-005 | Reportes |  | N/A |
 
 3.2 Ejemplo: Requisito RF-003 (CRUD Empleados)
 
@@ -422,7 +422,7 @@ Ver matriz completa: [link a matriz]
 
 ---
 
-## 🚀 Automatizar la Matriz
+## Automatizar la Matriz
 
 Si quieres generar la matriz automáticamente desde Git + Jira:
 
@@ -458,7 +458,7 @@ if __name__ == '__main__':
 
 ---
 
-## 📞 Preguntas Frecuentes
+## Preguntas Frecuentes
 
 **P: ¿Qué pasa si olvido incluir el ID de Jira en un commit?**
 R: La trazabilidad se pierde. Usa `git commit --amend` si aún no has hecho push, o crea un nuevo commit aclarando.
@@ -474,4 +474,4 @@ R: Verifica que cada RF tenga al menos 1 test automatizado.
 
 ---
 
-**¡La trazabilidad es la diferencia entre código caótico y profesional!** 📊✅
+**¡La trazabilidad es la diferencia entre código caótico y profesional!** 

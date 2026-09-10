@@ -1,10 +1,10 @@
-# 🎯 Templates de Pruebas - Listo para Copiar y Pegar
+#  Templates de Pruebas - Listo para Copiar y Pegar
 
 Este archivo contiene **templates prontos** que puedes copiar a tu proyecto para pruebas unitarias, integración y aceptación.
 
 ---
 
-## 📂 Estructura de Carpetas Recomendada
+## Estructura de Carpetas Recomendada
 
 ```
 proyecto_django/
@@ -23,7 +23,7 @@ proyecto_django/
 
 ---
 
-## 🧪 Template 1: Test Unitario Básico
+## Template 1: Test Unitario Básico
 
 Copia este archivo como `tests/test_unitarios.py`:
 
@@ -145,7 +145,7 @@ python manage.py test tests.test_unitarios -v 2
 
 ---
 
-## 🔗 Template 2: Test de Integración Básico
+## Template 2: Test de Integración Básico
 
 Copia este archivo como `tests/test_integracion.py`:
 
@@ -322,7 +322,7 @@ python manage.py test tests.test_integracion -v 2
 
 ---
 
-## ✅ Template 3: Test de Aceptación
+## Template 3: Test de Aceptación
 
 Copia este archivo como `tests/test_aceptacion.py`:
 
@@ -525,7 +525,7 @@ python manage.py test tests.test_aceptacion -v 2
 
 ---
 
-## 🔍 Template 4: Fixtures (Datos de Prueba)
+## Template 4: Fixtures (Datos de Prueba)
 
 Crea `tests/test_fixtures/usuarios.json`:
 
@@ -574,7 +574,7 @@ class TestConFixtures(TestCase):
 
 ---
 
-## 📊 Template 5: Coverage Report
+## Template 5: Coverage Report
 
 Crea `.coveragerc`:
 
@@ -607,35 +607,35 @@ coverage html
 
 ---
 
-## 🚀 Script para Ejecutar Todo
+## Script para Ejecutar Todo
 
 Crea `run_tests.ps1`:
 
 ```powershell
 # run_tests.ps1 - Ejecutar suite completa de tests
 
-Write-Host "🧪 Ejecutando suite de pruebas..." -ForegroundColor Green
+Write-Host " Ejecutando suite de pruebas..." -ForegroundColor Green
 
 # 1. Unitarios
-Write-Host "📝 Tests unitarios..." -ForegroundColor Cyan
+Write-Host " Tests unitarios..." -ForegroundColor Cyan
 python manage.py test tests.test_unitarios -v 2
 
 # 2. Integración
-Write-Host "🔗 Tests de integración..." -ForegroundColor Cyan
+Write-Host " Tests de integración..." -ForegroundColor Cyan
 python manage.py test tests.test_integracion -v 2
 
 # 3. Aceptación
-Write-Host "✅ Tests de aceptación..." -ForegroundColor Cyan
+Write-Host " Tests de aceptación..." -ForegroundColor Cyan
 python manage.py test tests.test_aceptacion -v 2
 
 # 4. Cobertura
-Write-Host "📊 Generando reporte de cobertura..." -ForegroundColor Cyan
+Write-Host " Generando reporte de cobertura..." -ForegroundColor Cyan
 coverage run --source='.' manage.py test
 coverage report --fail-under=70
 coverage html
 
-Write-Host "✅ Tests completados!" -ForegroundColor Green
-Write-Host "📊 Abre htmlcov/index.html para ver cobertura" -ForegroundColor Yellow
+Write-Host " Tests completados!" -ForegroundColor Green
+Write-Host " Abre htmlcov/index.html para ver cobertura" -ForegroundColor Yellow
 ```
 
 **Ejecutar:**
@@ -645,7 +645,7 @@ Write-Host "📊 Abre htmlcov/index.html para ver cobertura" -ForegroundColor Ye
 
 ---
 
-## ✅ Checklist de Setup
+## Checklist de Setup
 
 - [ ] Crear carpeta `tests/` con `__init__.py`
 - [ ] Copiar templates a `tests/test_*.py`
@@ -657,4 +657,4 @@ Write-Host "📊 Abre htmlcov/index.html para ver cobertura" -ForegroundColor Ye
 
 ---
 
-**¡Listos para hacer testing profesional!** 🚀
+**¡Listos para hacer testing profesional!** 
