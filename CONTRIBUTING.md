@@ -129,33 +129,76 @@ Sigue estas convenciones para mantener el histórico limpio y legible:
 
 ## 🔄 Flujo completo de ejemplo
 
-Imaginemos que tomas el ticket **SCRUM-7: Implementar catálogo de productos**
+Imaginemos que tomas el ticket **MLS-3: CRUD de Empleados**
 
+### 1️⃣ En Jira
+- Entras al tablero Jira
+- Seleccionas el ticket **MLS-3: CRUD de Empleados** desde el Backlog
+- Lo arrastras a la columna **"In Progress"** para notificar al equipo
+
+### 2️⃣ Actualizar rama main
 ```powershell
-# 1. Actualizar rama main
 git checkout main
 git pull origin main
+```
 
-# 2. Crear rama de trabajo
-git checkout -b feature/SCRUM-7-catalogo-productos
+### 3️⃣ Crear rama de trabajo
+```powershell
+git checkout -b feature/MLS-3-gestion-empleados
+```
 
-# 3. Desarrollar (hacer cambios en los archivos)
-# ... editas archivos, creas modelos, etc ...
+### 4️⃣ Desarrollar la funcionalidad
+Programas el CRUD de empleados:
+- Crear modelo `Employee` en Django
+- Crear vistas y serializadores
+- Agregar validaciones (ej. RUT único)
+- Crear endpoints de API
 
-# 4. Hacer commits
+**Si necesitas instalar librerías:**
+```powershell
+pip install pillow  # Por ejemplo, para manejar imágenes de perfiles
+pip freeze > requirements.txt
+```
+
+**Ejecutar migraciones:**
+```powershell
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 5️⃣ Hacer commits regulares
+Cada cambio importante merece su propio commit:
+
+```powershell
 git add .
-git commit -m "SCRUM-7: Crear modelo Product"
+git commit -m "MLS-3: Agrega modelo de empleados y validación de RUT único"
 
 # ... más desarrollo ...
 
 git add .
-git commit -m "SCRUM-7: Agregar API endpoint para listar productos"
+git commit -m "MLS-3: Implementa serializer y endpoints de CRUD para empleados"
 
-# 5. Subir rama a GitHub
-git push origin feature/SCRUM-7-catalogo-productos
-
-# 6. En GitHub/Jira: Crear Pull Request y pedir revisión del equipo
+git add .
+git commit -m "MLS-3: Agrega validaciones de datos y manejo de errores"
 ```
+
+### 6️⃣ Subir rama a GitHub
+```powershell
+git push origin feature/MLS-3-gestion-empleados
+```
+
+💡 **Nota:** La primera vez, GitHub puede pedirte autorización en el navegador.
+
+### 7️⃣ Crear Pull Request (PR)
+- Ve a GitHub
+- Crea un Pull Request desde tu rama hacia `main`
+- Agrega descripción clara del trabajo realizado
+- Asigna revisores del equipo
+- En Jira, el ticket se vinculará automáticamente gracias a la clave MLS-3
+
+---
+
+**Para ver más detalles paso a paso, consulta el archivo `WORKFLOW-EXAMPLE.md`**
 
 ---
 
