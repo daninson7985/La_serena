@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Tubo de Trabajo | Matriz SGR{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4">
+  <div class="card p-4 shadow-sm border-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-primary text-uppercase fw-bold">Gestión Operativa</span>
+          <span class="text-secondary small">Agenda Colectiva & Compromisos Ciudadanos</span>
+        </div>
+        <h3 class="fw-black mb-0 text-light">Tubo de Trabajo de las Delegaciones</h3>
+        <small class="text-secondary">Seguimiento de compromisos vecinales. Todo ticket vencido sin cerrar se destaca en alerta roja.</small>
+      </div>
+
+      <button type="button" class="btn btn-danger fw-bold d-flex align-items-center gap-1 shadow" data-bs-toggle="modal" data-bs-target="#modalNuevoCompromiso">
+        <i class="bi bi-plus-circle fs-6"></i> Nuevo Compromiso
+      </button>
+    </div>
+  </div>
+
+  <!-- Tablero Kanban de 4 Columnas -->
+  <div class="row g-3">
+    <!-- 1. Ingresado -->
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card border-primary p-3 h-100 bg-opacity-10 bg-primary">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+          <h6 class="fw-bold text-primary mb-0"><i class="bi bi-inbox-fill me-1"></i> Ingresado</h6>
+          <span class="badge bg-primary">{{ ingresados|length }}</span>
+        </div>
+        <div class="d-flex flex-column">
+          {% for c in ingresados %}
+            {% include "compromiso_card.html" with item=c %}
+          {% empty %}
+            <div class="text-center text-secondary small py-4">Sin compromisos</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Pendiente -->
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card border-warning p-3 h-100 bg-opacity-10 bg-warning">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+          <h6 class="fw-bold text-warning mb-0"><i class="bi bi-hourglass-split me-1"></i> Pendiente</h6>
+          <span class="badge bg-warning text-dark">{{ pendientes|length }}</span>
+        </div>
+        <div class="d-flex flex-column">
+          {% for c in pendientes %}
+            {% include "compromiso_card.html" with item=c %}
+          {% empty %}
+            <div class="text-center text-secondary small py-4">Sin compromisos</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. En Proceso -->
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card border-info p-3 h-100 bg-opacity-10 bg-info">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+          <h6 class="fw-bold text-info mb-0"><i class="bi bi-arrow-repeat me-1"></i> En Proceso</h6>
+          <span class="badge bg-info text-dark">{{ en_proceso|length }}</span>
+        </div>
+        <div class="d-flex flex-column">
+          {% for c in en_proceso %}
+            {% include "compromiso_card.html" with item=c %}
+          {% empty %}
+            <div class="text-center text-secondary small py-4">Sin compromisos</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Realizado -->
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card border-success p-3 h-100 bg-opacity-10 bg-success">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+          <h6 class="fw-bold text-success mb-0"><i class="bi bi-check-all me-1"></i> Realizado</h6>
+          <span class="badge bg-success">{{ realizados|length }}</span>
+        </div>
+        <div class="d-flex flex-column">
+          {% for c in realizados %}
+            {% include "compromiso_card.html" with item=c %}
+          {% empty %}
+            <div class="text-center text-secondary small py-4">Sin compromisos</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nuevo Compromiso -->
+  <div class="modal fade" id="modalNuevoCompromiso" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title fw-bold text-danger"><i class="bi bi-plus-circle me-1"></i> Registrar Solicitud al Tubo de Trabajo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="{% url 'web_crear_compromiso' %}">
+          {% csrf_token %}
+          <div class="modal-body small">
+            <div class="mb-3">
+              <label class="form-label text-secondary fw-bold text-uppercase">Solicitante (Vecino u Organización Anonimizado)</label>
+              <input type="text" name="solicitante" class="form-control bg-black text-light border-secondary" required placeholder="Ej. Junta de Vecinos El Olivar">
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label text-secondary fw-bold text-uppercase">Delegación</label>
+                <select name="delegacion_id" class="form-select bg-black text-light border-secondary" required>
+                  {% for d in delegaciones %}
+                    <option value="{{ d.id }}">{{ d.nombre }} ({{ d.codigo }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label text-secondary fw-bold text-uppercase">Responsable Asignado</label>
+                <select name="responsable_id" class="form-select bg-black text-light border-secondary" required>
+                  {% for u in usuarios_terreno %}
+                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.delegacion.codigo|default:'Central' }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label text-secondary fw-bold text-uppercase">Fecha Comprometida</label>
+                <input type="date" name="fecha_comprometida" class="form-control bg-black text-light border-secondary" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label text-secondary fw-bold text-uppercase">Área de Apoyo</label>
+                <input type="text" name="area_apoyo" value="Operaciones Municipales" class="form-control bg-black text-light border-secondary">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary fw-bold text-uppercase">Descripción del Requerimiento</label>
+              <textarea name="descripcion" rows="3" class="form-control bg-black text-light border-secondary" required placeholder="Detalles de la gestión..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger btn-sm fw-bold">Guardar en Tubo de Trabajo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

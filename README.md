@@ -67,3 +67,40 @@ git commit -m "MLS-123: Descripción del cambio"
 ## Contacto
 
 Para más información sobre el proyecto, accede al [tablero de Jira](https://inacapmail-team-uzxvvgtm.atlassian.net/jira/software/projects/MLS/boards/2/timeline).
+
+---
+
+## Prototipo Funcional (Matriz SGR - ML-16)
+
+Implementación Full Stack desarrollada para el cumplimiento del ticket **ML-16** (*FASE 1: Análisis, Diseño y Modelado*):
+
+* **Backend (Django REST Framework)**: Ubicado en la carpeta [`backend/`](backend/). Para instrucciones de instalación, catálogo de endpoints de la API REST, reglas de negocio y tests, consultar **[backend/README.md](backend/README.md)**.
+* **Frontend (Next.js 14 + Tailwind CSS)**: Ubicado en la carpeta [`frontend/`](frontend/). Para catálogo de pantallas, vistas responsivas y modo sin conexión (offline), consultar **[frontend/README.md](frontend/README.md)**.
+
+### Puesta en Marcha Rápida en Local
+
+#### 1. Backend (Terminal 1)
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r ../requirements.txt
+python manage.py migrate
+python manage.py poblar_sgr
+python manage.py runserver
+```
+*(Servidor activo en `http://127.0.0.1:8000/`)*
+
+#### 2. Frontend (Terminal 2)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*(Interfaz activa en `http://localhost:3000/`)*
+
+### Cuentas de Prueba Precargadas:
+* **Administrador:** `admin` / `AdminSGR2026!`
+* **Coordinador:** `coordinador` / `CoordSGR2026!`
+* **Delegado Centro:** `delegado_centro` / `Delegado2026!`
+* **Funcionario Centro:** `funcionario_centro` / `Func2026!`

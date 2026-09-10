@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Terreno (3 Clics) | Matriz SGR{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-5">
+    <div class="d-flex flex-column gap-3">
+      <!-- Banner Modo Terreno -->
+      <div class="card p-3 shadow-sm border-0 d-flex flex-row justify-content-between align-items-center">
+        <div>
+          <span class="badge bg-danger text-uppercase fw-bold"><i class="bi bi-lightning-charge-fill"></i> Terreno Rápido</span>
+          <h5 class="fw-black mb-0 text-light mt-1">Reporte en 3 Clics</h5>
+        </div>
+        <div class="text-end">
+          <small class="text-secondary d-block">Funcionario:</small>
+          <strong class="text-light small">{{ request.user.get_full_name|default:request.user.username }}</strong>
+        </div>
+      </div>
+
+      <!-- Formulario 3 Clics -->
+      <form id="form-terreno" onsubmit="enviarReporteTerreno(event)">
+        {% csrf_token %}
+        <!-- CLIC 1: SELECCIONAR TAREA -->
+        <div class="card p-3 mb-3 border-secondary">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-danger fw-bold">CLIC 1</span>
+            <small class="text-secondary text-uppercase fw-bold">Selecciona el Problema o Tarea</small>
+          </div>
+
+          <div class="d-flex flex-column gap-2" id="grupo-items">
+            {% for it in items_medicion %}
+              <label class="btn btn-outline-secondary text-start p-2 d-flex justify-content-between align-items-center item-btn">
+                <div class="small">
+                  <div class="fw-bold text-light">{{ it.nombre_item }}</div>
+                  <small class="text-secondary" style="font-size: 0.7rem;">Ponderador: {{ it.ponderador }}% • Meta: {{ it.meta_cuantitativa }}</small>
+                </div>
+                <input type="radio" name="item_medicion" value="{{ it.id }}" class="form-check-input ms-2" {% if forloop.first %}checked{% endif %} onchange="seleccionarItem(this)">
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- CLIC 2: CÁMARA Y GPS -->
+        <div class="card p-3 mb-3 border-secondary">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-warning text-dark fw-bold">CLIC 2</span>
+            <small class="text-secondary text-uppercase fw-bold">Foto de Evidencia + GPS</small>
+          </div>
+
+          <input type="file" id="inp-camara" accept="image/*" capture="environment" class="d-none" onchange="previewCamara(this)">
+
+          <div id="btn-abrir-camara" class="border border-2 border-dashed border-secondary rounded p-4 text-center" onclick="document.getElementById('inp-camara').click()" style="cursor: pointer;">
+            <i class="bi bi-camera-fill fs-1 text-warning"></i>
+            <div class="fw-bold text-light small mt-1">Toca aquí para abrir la cámara nativa</div>
+            <small class="text-secondary">Captura la fotografía in situ del trabajo</small>
+          </div>
+
+          <div id="preview-box" class="d-none position-relative rounded overflow-hidden mt-2">
+            <img id="img-preview" class="w-100 object-fit-cover rounded" style="max-height: 200px;" alt="Vista previa">
+            <button type="button" class="btn btn-sm btn-dark position-absolute bottom-0 end-0 m-2" onclick="document.getElementById('inp-camara').click()">
+              Cambiar Foto
+            </button>
+          </div>
+
+          <div class="bg-dark p-2 rounded mt-2 d-flex justify-content-between align-items-center small text-secondary">
+            <span><i class="bi bi-geo-alt-fill text-danger"></i> <span id="gps-status">Detectando GPS...</span></span>
+            <span class="badge bg-success-subtle text-success">Geo-referenciado</span>
+          </div>
+        </div>
+
+        <!-- CLIC 3: ENVIAR -->
+        <div class="card p-3 border-secondary">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-success fw-bold">CLIC 3</span>
+            <small class="text-secondary text-uppercase fw-bold">Confirmar y Enviar</small>
+          </div>
+
+          <button type="submit" id="btn-enviar" class="btn btn-danger btn-lg w-100 py-3 fw-black text-uppercase shadow-lg">
+            <i class="bi bi-send-fill me-2"></i> Enviar Tarea a Validación
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let gpsCoords = { lat: -29.9027, lng: -71.2519 };
+  let base64Foto = '';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          document.getElementById('gps-status').innerText = 'GPS: ' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4);
+        },
+        () => {
+          document.getElementById('gps-status').innerText = 'GPS: La Serena (-29.9027, -71.2519)';
+        }
+      );
+    }
+  });
+
+  function previewCamara(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        base64Foto = e.target.result;
+        document.getElementById('img-preview').src = base64Foto;
+        document.getElementById('preview-box').classList.remove('d-none');
+        document.getElementById('btn-abrir-camara').classList.add('d-none');
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function seleccionarItem(radio) {
+    document.querySelectorAll('.item-btn').forEach(b => b.classList.remove('active', 'border-danger'));
+    radio.closest('.item-btn').classList.add('active', 'border-danger');
+  }
+
+  async function enviarReporteTerreno(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Guardando...';
+
+    const selectedItem = document.querySelector('input[name="item_medicion"]:checked');
+    const itemId = selectedItem ? selectedItem.value : null;
+
+    const payload = {
+      id_local: 'terreno-' + Date.now(),
+      funcionario: {{ request.user.id|default:1 }},
+      delegacion: {{ request.user.delegacion.id|default:4 }},
+      item_medicion: itemId,
+      actividad_solicitud: 'Inspección operativa ejecutada en terreno',
+      accion_ejecutada: 'Gestión y verificación realizada en terreno.',
+      contacto_nombre: 'Vecino Anonimizado (Terreno)',
+      contacto_telefono: '+56900000000',
+      latitud: gpsCoords.lat,
+      longitud: gpsCoords.lng,
+      url_foto_simulada: base64Foto || 'https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80'
+    };
+
+    if (!navigator.onLine) {
+      guardarRegistroOffline(payload);
+      alert('¡Sin conexión a internet! Tu registro se ha guardado localmente en tu teléfono y se enviará automáticamente al recuperar señal.');
+      window.location.href = "{% url 'web_personal' %}";
+      return;
+    }
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    try {
+      const res = await fetch('/api/actividades/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('¡Excelente! Actividad registrada con éxito.\nCódigo Único de Evidencia: ' + (data.evidencia ? data.evidencia.codigo_verificador : 'SGR-OK'));
+        window.location.href = "{% url 'web_personal' %}";
+      } else {
+        alert('Respuesta del servidor: ' + (data.error || JSON.stringify(data)));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill me-2"></i> Reintentar Envío';
+      }
+    } catch (err) {
+      guardarRegistroOffline(payload);
+      alert('No se pudo conectar con el servidor municipal. Se ha guardado en tu dispositivo para sincronizarse en cuanto vuelva la señal.');
+      window.location.href = "{% url 'web_personal' %}";
+    }
+  }
+</script>
+{% endblock %}
