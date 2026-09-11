@@ -1,0 +1,37 @@
+<div class="card bg-white border p-3 shadow-sm mb-2 {% if item.estado != 'REALIZADO' and item.fecha_comprometida < hoy %}border-danger border-2{% endif %}">
+  {% if item.estado != 'REALIZADO' and item.fecha_comprometida < hoy %}
+    <div class="badge bg-danger text-uppercase fw-bold mb-2 align-self-start" style="font-size: 0.65rem;">
+      <i class="bi bi-exclamation-triangle-fill me-1"></i> ¡Compromiso Vencido!
+    </div>
+  {% endif %}
+
+  <div class="fw-bold text-dark small mb-1">{{ item.solicitante }}</div>
+  <p class="text-secondary small mb-2" style="font-size: 0.75rem;">{{ item.descripcion }}</p>
+
+  <div class="small border-top pt-2 mt-1 text-secondary" style="font-size: 0.75rem;">
+    <div class="d-flex justify-content-between">
+      <span>Delegación:</span>
+      <strong class="text-dark">{{ item.delegacion.codigo }}</strong>
+    </div>
+    <div class="d-flex justify-content-between">
+      <span>Responsable:</span>
+      <strong class="text-dark">{{ item.responsable.get_full_name|default:item.responsable.username }}</strong>
+    </div>
+    <div class="d-flex justify-content-between">
+      <span>Límite:</span>
+      <strong class="{% if item.estado != 'REALIZADO' and item.fecha_comprometida < hoy %}text-danger fw-bold{% else %}text-dark{% endif %}">
+        {{ item.fecha_comprometida|date:"d/m/Y" }}
+      </strong>
+    </div>
+  </div>
+
+  <form method="POST" action="{% url 'web_cambiar_estado_compromiso' item.id %}" class="mt-2 pt-2 border-top">
+    {% csrf_token %}
+    <select name="estado" class="form-select form-select-sm bg-white text-dark border fw-semibold" style="font-size: 0.75rem; background-color: #ffffff !important; color: #1e293b !important;" onchange="this.form.submit()">
+      <option value="INGRESADO" style="background-color: #ffffff !important; color: #1e293b !important;" {% if item.estado == 'INGRESADO' %}selected{% endif %}>Mover a: Ingresado</option>
+      <option value="PENDIENTE" style="background-color: #ffffff !important; color: #1e293b !important;" {% if item.estado == 'PENDIENTE' %}selected{% endif %}>Mover a: Pendiente</option>
+      <option value="EN_PROCESO" style="background-color: #ffffff !important; color: #1e293b !important;" {% if item.estado == 'EN_PROCESO' %}selected{% endif %}>Mover a: En Proceso</option>
+      <option value="REALIZADO" style="background-color: #ffffff !important; color: #1e293b !important;" {% if item.estado == 'REALIZADO' %}selected{% endif %}>Mover a: Realizado</option>
+    </select>
+  </form>
+</div>
