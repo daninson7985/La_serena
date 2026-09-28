@@ -19,6 +19,7 @@ __pycache__/
 local_settings.py
 .env
 .env.local
+datos.json
 staticfiles/
 
 # Base de datos SQLite (se genera en local con migrate y poblar_sgr)
