@@ -68,9 +68,22 @@
               <p class="mb-2 text-secondary">{{ ev.actividad.accion_ejecutada }}</p>
               
               <div class="border-top pt-2 mt-2">
-                <div class="text-dark"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Delegación: <strong>{{ ev.actividad.delegacion.nombre }}</strong></div>
+                {% if ev.actividad.direccion %}
+                  <div class="text-dark mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Dirección: <strong>{{ ev.actividad.direccion }}</strong></div>
+                {% endif %}
+                <div class="text-dark"><i class="bi bi-building text-secondary me-1"></i> Delegación: <strong>{{ ev.actividad.delegacion.nombre }}</strong></div>
                 <div class="text-dark"><i class="bi bi-person-fill text-primary me-1"></i> Funcionario: <strong>{{ ev.actividad.funcionario.get_full_name|default:ev.actividad.funcionario.username }}</strong></div>
                 <div class="text-secondary"><i class="bi bi-calendar3 me-1"></i> Fecha: {{ ev.fecha_subida|date:"d/m/Y H:i" }}</div>
+                {% if ev.fotos_adicionales %}
+                  <div class="d-flex gap-1 mt-2 align-items-center">
+                    <small class="text-secondary me-1" style="font-size: 0.72rem;">Fotos extra:</small>
+                    {% for f in ev.fotos_adicionales %}
+                      <a href="{{ f.url }}" target="_blank" title="Evidencia {{ f.num }}">
+                        <img src="{{ f.url }}" class="rounded border" style="width: 36px; height: 36px; object-fit: cover;" alt="Extra {{ f.num }}">
+                      </a>
+                    {% endfor %}
+                  </div>
+                {% endif %}
                 {% if ev.observacion %}
                   <div class="p-2 bg-warning-subtle rounded border border-warning mt-2 text-dark">
                     <small class="fw-bold d-block text-danger">Motivo de Rechazo:</small>

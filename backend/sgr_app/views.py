@@ -260,12 +260,20 @@ class ActividadViewSet(viewsets.ModelViewSet):
 
         # Generar evidencia vinculada de inmediato con su código alfanumérico único
         foto_archivo = request.FILES.get('archivo_foto')
+        foto_archivo_2 = request.FILES.get('archivo_foto_2')
+        foto_archivo_3 = request.FILES.get('archivo_foto_3')
         url_simulada = data.get('url_foto_simulada') or ''
+        url_simulada_2 = data.get('url_foto_simulada_2') or ''
+        url_simulada_3 = data.get('url_foto_simulada_3') or ''
 
         evidencia = Evidencia.objects.create(
             actividad=actividad,
             archivo_foto=foto_archivo,
+            archivo_foto_2=foto_archivo_2,
+            archivo_foto_3=foto_archivo_3,
             url_foto_simulada=url_simulada or 'https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80',
+            url_foto_simulada_2=url_simulada_2,
+            url_foto_simulada_3=url_simulada_3,
             estado=Evidencia.Estado.PENDIENTE
         )
 

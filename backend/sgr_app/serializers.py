@@ -1,4 +1,4 @@
-﻿from rest_framework import serializers
+from rest_framework import serializers
 from sgr_app.models import (
     Usuario, Delegacion, Cargo, PeriodoMedicion, CatalogoServicio,
     ItemMedicion, CompromisoAgenda, Actividad, Evidencia,
@@ -60,7 +60,8 @@ class EvidenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evidencia
         fields = [
-            'id', 'actividad', 'codigo_verificador', 'archivo_foto', 'url_foto_simulada',
+            'id', 'actividad', 'codigo_verificador', 'archivo_foto', 'archivo_foto_2', 'archivo_foto_3',
+            'url_foto_simulada', 'url_foto_simulada_2', 'url_foto_simulada_3',
             'hash_sha256', 'estado', 'verificador', 'verificador_nombre',
             'fecha_validacion', 'observacion', 'fecha_subida'
         ]
@@ -89,7 +90,7 @@ class ActividadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'fecha_registro', 'fecha_actividad', 'funcionario', 'funcionario_nombre',
             'delegacion', 'delegacion_nombre', 'delegacion_codigo', 'item_medicion', 'item_nombre',
-            'catalogo_servicio', 'actividad_solicitud', 'accion_ejecutada',
+            'catalogo_servicio', 'actividad_solicitud', 'accion_ejecutada', 'direccion',
             'contacto_nombre', 'contacto_telefono', 'latitud', 'longitud',
             'compromiso_agenda', 'evidencia', 'creado_en', 'actualizado_en'
         ]

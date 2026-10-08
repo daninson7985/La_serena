@@ -179,6 +179,7 @@ class Actividad(models.Model):
     
     actividad_solicitud = models.CharField(max_length=255, help_text="Problema atendido o solicitud")
     accion_ejecutada = models.TextField(help_text="Acción desarrollada")
+    direccion = models.CharField(max_length=255, blank=True, null=True, help_text="Dirección o sector de la intervención")
     contacto_nombre = models.CharField(max_length=150, blank=True, null=True, help_text="Nombre de referencia anonimizado")
     contacto_telefono = models.CharField(max_length=50, blank=True, null=True, help_text="Teléfono anonimizado")
     
@@ -209,7 +210,11 @@ class Evidencia(models.Model):
     actividad = models.OneToOneField(Actividad, on_delete=models.CASCADE, related_name='evidencia')
     codigo_verificador = models.CharField(max_length=30, unique=True, editable=False, db_index=True)
     archivo_foto = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
+    archivo_foto_2 = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
+    archivo_foto_3 = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
     url_foto_simulada = models.URLField(max_length=500, blank=True, null=True)
+    url_foto_simulada_2 = models.URLField(max_length=500, blank=True, null=True)
+    url_foto_simulada_3 = models.URLField(max_length=500, blank=True, null=True)
     hash_sha256 = models.CharField(max_length=64, blank=True, null=True)
     
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
@@ -230,6 +235,35 @@ class Evidencia(models.Model):
             except Exception:
                 pass
         return self.url_foto_simulada or 'https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80'
+
+    @property
+    def get_foto_url_2(self):
+        if self.archivo_foto_2:
+            try:
+                return self.archivo_foto_2.url
+            except Exception:
+                pass
+        return self.url_foto_simulada_2 or ''
+
+    @property
+    def get_foto_url_3(self):
+        if self.archivo_foto_3:
+            try:
+                return self.archivo_foto_3.url
+            except Exception:
+                pass
+        return self.url_foto_simulada_3 or ''
+
+    @property
+    def fotos_adicionales(self):
+        fotos = []
+        f2 = self.get_foto_url_2
+        if f2:
+            fotos.append({'num': 2, 'url': f2})
+        f3 = self.get_foto_url_3
+        if f3:
+            fotos.append({'num': 3, 'url': f3})
+        return fotos
 
     def save(self, *args, **kwargs):
         if not self.codigo_verificador:

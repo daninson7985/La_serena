@@ -249,12 +249,12 @@ def web_crear_compromiso(request):
         return redirect('web_login')
 
     if request.method == 'POST':
-        solicitante = request.POST.get('solicitante')
-        delegacion_id = request.POST.get('delegacion_id')
-        responsable_id = request.POST.get('responsable_id')
-        fecha_comp = request.POST.get('fecha_comprometida')
-        area_apoyo = request.POST.get('area_apoyo', 'Operaciones')
-        descripcion = request.POST.get('descripcion')
+        solicitante = (request.POST.get('solicitante') or '').strip() or 'Vecino La Serena'
+        delegacion_id = request.POST.get('delegacion_id') or (request.user.delegacion_id or 1)
+        responsable_id = request.POST.get('responsable_id') or request.user.id
+        fecha_comp = request.POST.get('fecha_comprometida') or timezone.now().date()
+        area_apoyo = request.POST.get('area_apoyo') or 'Operaciones y Territorio'
+        descripcion = (request.POST.get('descripcion') or '').strip() or 'Compromiso vecinal registrado en terreno'
 
         c = CompromisoAgenda.objects.create(
             solicitante=solicitante,

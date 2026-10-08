@@ -215,3 +215,26 @@ class MatrizSGRTestSuite(TestCase):
         self.assertEqual(resp_del.status_code, 200)
         ev.refresh_from_db()
         self.assertEqual(ev.estado, Evidencia.Estado.APROBADA)
+
+    # 11. Registro de Evidencias de Terreno con Dirección y Múltiples Fotos
+    def test_registro_evidencias_terreno_con_direccion_y_fotos(self):
+        c = Client()
+        c.force_login(self.usuario)
+        payload = {
+            'funcionario': self.usuario.id,
+            'delegacion': self.delegacion.id,
+            'item_medicion': self.item1.id,
+            'actividad_solicitud': 'Inspección operativa: Balmaceda 1234',
+            'accion_ejecutada': 'Bacheo y demarcación de calzada completado.',
+            'direccion': 'Balmaceda 1234, La Serena',
+            'url_foto_simulada': 'https://ejemplo.cl/foto1.jpg',
+            'url_foto_simulada_2': 'https://ejemplo.cl/foto2.jpg',
+            'url_foto_simulada_3': 'https://ejemplo.cl/foto3.jpg'
+        }
+        resp = c.post('/api/actividades/', payload, content_type='application/json')
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()
+        self.assertEqual(data['direccion'], 'Balmaceda 1234, La Serena')
+        self.assertIsNotNone(data['evidencia'])
+        self.assertEqual(data['evidencia']['url_foto_simulada_2'], 'https://ejemplo.cl/foto2.jpg')
+        self.assertEqual(data['evidencia']['url_foto_simulada_3'], 'https://ejemplo.cl/foto3.jpg')
