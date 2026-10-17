@@ -31,6 +31,7 @@ urlpatterns = [
     path('dashboard/', web_views.web_dashboard, name='web_dashboard'),
     path('personal/', web_views.web_personal, name='web_personal'),
     path('verificacion/', web_views.web_verificacion, name='web_verificacion'),
+    path('evidencias/', web_views.web_verificacion, name='web_evidencias'),
     path('verificacion/<int:evidencia_id>/validar/', web_views.web_validar_evidencia, name='web_validar_evidencia'),
     path('tubo/', web_views.web_tubo, name='web_tubo'),
     path('tubo/<int:compromiso_id>/cambiar-estado/', web_views.web_cambiar_estado_compromiso, name='web_cambiar_estado_compromiso'),
