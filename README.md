@@ -55,7 +55,7 @@ git commit -m "MLS-123: Descripción del cambio"
 ## Equipo
 
 - **Dev 1** - Administrador del proyecto
-- **Dev 2 (Matías)** - Desarrollador
+- **Dev 2 ** - Desarrollador
 - **Dev 3** - Desarrollador
 
 ## Próximos Pasos
