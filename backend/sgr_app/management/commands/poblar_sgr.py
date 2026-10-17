@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from sgr_app.models import (
@@ -55,14 +55,14 @@ class Command(BaseCommand):
             username="admin",
             defaults={"first_name": "Admin", "last_name": "Sistema", "email": "admin.sgr@laserena.cl", "rol": Usuario.Rol.ADMIN, "is_staff": True, "is_superuser": True}
         )
-        admin_u.set_password("AdminSGR2026!")
+        admin_u.set_password("Password123!")
         admin_u.save()
 
         coord_u, _ = Usuario.objects.get_or_create(
             username="coordinador",
             defaults={"first_name": "Coordinador", "last_name": "Comunal", "email": "coordinacion@laserena.cl", "rol": Usuario.Rol.COORDINADOR, "cargo": cargos["Coordinador Comunal"]}
         )
-        coord_u.set_password("CoordSGR2026!")
+        coord_u.set_password("Password123!")
         coord_u.save()
 
         # Delegados reales según documento
@@ -87,12 +87,13 @@ class Command(BaseCommand):
                     "delegacion": dels[cod_del]
                 }
             )
-            u.set_password("Delegado2026!")
+            u.set_password("Password123!")
             u.save()
             delegados_dict[cod_del] = u
 
         # Funcionarios en terreno
         funcionarios_data = [
+            ("carlos.tapia", "Carlos", "Tapia", "Gestor Territorial", "CIA"),
             ("carlos.terreno.cia", "Carlos", "Tapia", "Gestor Territorial", "CIA"),
             ("ana.social.cia", "Ana", "Rojas", "Trabajador Social", "CIA"),
             ("javier.terreno.ant", "Javier", "Morales", "Gestor Territorial", "ANT"),
@@ -112,7 +113,7 @@ class Command(BaseCommand):
                     "delegacion": dels[cod_del]
                 }
             )
-            u.set_password("Terreno2026!")
+            u.set_password("Password123!")
             u.save()
             funcionarios_dict[usr] = u
 
