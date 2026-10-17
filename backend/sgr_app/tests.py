@@ -238,3 +238,199 @@ class MatrizSGRTestSuite(TestCase):
         self.assertIsNotNone(data['evidencia'])
         self.assertEqual(data['evidencia']['url_foto_simulada_2'], 'https://ejemplo.cl/foto2.jpg')
         self.assertEqual(data['evidencia']['url_foto_simulada_3'], 'https://ejemplo.cl/foto3.jpg')
+
+    # 12. Métodos del Diagrama de Clases UML (Documento de Soledad Valdebenito)
+    def test_metodos_diagrama_clases_soledad(self):
+        from sgr_app.models import (
+            Actividad, Compromiso, Evidencia, Solicitante, Funcionario,
+            Auditoria, Rol, Delegacion, Cargo, Area, Item, Meta, Periodo,
+            Indicador, AjusteIncentivo
+        )
+
+        # 1. Rol y permisos
+        rol_coord = Rol.objects.create(nombre="COORDINADOR", descripcion="Coordinador Comunal")
+        self.assertTrue(rol_coord.tienePermiso("GESTIONAR_COORDINACION"))
+        self.assertFalse(rol_coord.tienePermiso("PERMISO_INEXISTENTE"))
+
+        # 2. Area
+        area_ops = Area.objects.create(nombre="Operaciones y Territorio")
+        self.assertTrue(area_ops.activarArea())
+        self.assertEqual(area_ops.obtenerCantidadFuncionarios(), 0)
+
+        # 3. Delegacion: activar, desactivar, cumplimiento, semaforo
+        self.assertTrue(self.delegacion.activarDelegacion())
+        res_sem = self.delegacion.obtenerResumenSemaforo()
+        self.assertIn("VERDE", res_sem)
+
+        # 4. Cargo: activar, desactivar
+        self.assertTrue(self.cargo.activarCargo())
+
+        # 5. Solicitante y validarRun Módulo 11
+        sol = Solicitante.objects.create(run="11.111.111-1", nombre="Juan Pérez")
+        # RUN válido de prueba: 11111111-1 es válido en algoritmo módulo 11
+        self.assertTrue(sol.validarRun())
+        historial = sol.obtenerHistorial()
+        self.assertIsNotNone(historial)
+
+        # 6. Funcionario (Usuario): es_admin, validarRun, registrarActividad, verDashboardPersonal
+        func = self.usuario
+        func.rut_anonimizado = "11.111.111-1"
+        func.save()
+        self.assertTrue(func.validarRun())
+        self.assertFalse(func.es_admin())
+        dash = func.verDashboardPersonal()
+        self.assertIn("funcionario", dash)
+        self.assertIn("cumplimiento_general", dash)
+
+        # 7. Actividad: asociarSolicitante, generarCompromiso, adjuntarEvidencia
+        act = func.registrarActividad(
+            fecha_solicitud=date(2026, 8, 1),
+            solicitud_problema="Luminaria apagada",
+            accion="Reparación luminaria",
+            item=self.item1,
+            solicitante=sol
+        )
+        act.asociarSolicitante(sol)
+        comp = act.generarCompromiso(
+            origen="Vecino Central",
+            territorio=self.delegacion,
+            fecha_compromiso=date(2026, 8, 20),
+            area_apoyo="Alumbrado",
+            observacion="Urgente"
+        )
+        self.assertEqual(comp.solicitante, "Vecino Central")
+        evid = act.adjuntarEvidencia("https://ejemplo.cl/evidencia.jpg", descripcion="Foto luminaria")
+        self.assertEqual(evid.estado, Evidencia.Estado.PENDIENTE)
+
+        # 8. Compromiso: actualizarEstado, fechaVencida, reprogramarFecha, marcarCompletado
+        comp.actualizarEstado("PENDIENTE")
+        self.assertTrue(comp.fechaVencida())
+        self.assertGreater(comp.calcularDiasAtraso(), 0)
+        comp.reprogramarFecha(date(2026, 12, 31), motivo="Falta repuesto")
+        self.assertFalse(comp.fechaVencida())
+        comp.marcarCompletado()
+        self.assertEqual(comp.estado, "REALIZADO")
+
+        # 9. Evidencia: cargarArchivo, solicitarValidacion, validarEvidencia, rechazarEvidencia
+        evid.solicitarValidacion()
+        self.assertEqual(evid.estado, Evidencia.Estado.PENDIENTE)
+        evid.validarEvidencia("Aprobado por delegado")
+        self.assertEqual(evid.estado, Evidencia.Estado.APROBADA)
+        evid.rechazarEvidencia("Rechazado por foto borrosa")
+        self.assertEqual(evid.estado, Evidencia.Estado.RECHAZADA)
+
+        # 10. Periodo: evaluarCumplimiento, vigenciaFecha, estaActivo, calcularMetaEsperadaAlDia
+        self.assertEqual(self.periodo.evaluarCumplimiento(95.0), "VERDE")
+        self.assertEqual(self.periodo.evaluarCumplimiento(65.0), "AMARILLO")
+        self.assertEqual(self.periodo.evaluarCumplimiento(30.0), "ROJO")
+        self.assertTrue(self.periodo.vigenciaFecha(date(2026, 8, 1)))
+        meta_esp = self.periodo.calcularMetaEsperadaAlDia(100.0)
+        self.assertGreaterEqual(meta_esp, 0.0)
+
+        # 11. Meta e Indicador
+        meta = Meta.objects.create(
+            periodo=self.periodo,
+            funcionario=func,
+            delegacion=self.delegacion,
+            valorMeta=10.0,
+            ponderador=30.0
+        )
+        self.assertEqual(meta.obtenerEstadoSemaforo(), "ROJO")
+        self.assertTrue(meta.validarPonderacion())
+        indicador = Indicador.objects.create(meta=meta, periodo=self.periodo, avance=8.0)
+        indicador.actualizarAvance(9.0)
+        self.assertEqual(indicador.avance, 9.0)
+
+        # 12. AjusteIncentivo: aplicarAjuste, aprobarAjuste, rechazarAjuste
+        admin_u = Usuario.objects.create_user(username="admin.ajustes", password="p", rol=Usuario.Rol.ADMIN)
+        ajuste = AjusteIncentivo.objects.create(
+            funcionario=func,
+            periodo=self.periodo,
+            tipo="BONIFICACION",
+            valorPorcentaje=10.0,
+            estado="PENDIENTE"
+        )
+        # Funcionario sin permisos lanza PermissionError
+        with self.assertRaises(PermissionError):
+            ajuste.aprobarAjuste(func)
+        # Admin intentando auto-aprobarse su propio ajuste lanza ValueError
+        ajuste_propio_admin = AjusteIncentivo.objects.create(
+            funcionario=admin_u, periodo=self.periodo, tipo="BONIFICACION", valorPorcentaje=5.0, estado="PENDIENTE"
+        )
+        with self.assertRaises(ValueError):
+            ajuste_propio_admin.aprobarAjuste(admin_u)
+        # Admin sí puede aprobar ajuste de otro funcionario
+        self.assertTrue(ajuste.aprobarAjuste(admin_u))
+        self.assertEqual(ajuste.estado, "APROBADO")
+        # Aplicar ajuste suma al porcentaje base
+        self.assertEqual(ajuste.aplicarAjuste(80.0), 90.0)
+
+        # 13. Auditoria: registrarAuditoria, consultarHistorial
+        log = Auditoria.registrarAuditoria("TEST_EVENT", "Meta", meta.id, {"val": 1}, {"val": 2}, func)
+        self.assertIsNotNone(log)
+        hist = Auditoria.consultarHistorial("Meta", str(meta.id))
+        self.assertEqual(hist.count(), 1)
+
+    # =========================================================================
+    # PLAN DE PRUEBAS UNITARIAS - MÓDULO AUTENTICACIÓN (CP-LOGIN-001 a 008)
+    # =========================================================================
+    def test_cp_login_001_credenciales_validas(self):
+        """CP-LOGIN-001: Login con usuario y contraseña válidos -> Autenticación exitosa."""
+        c = Client()
+        resp = c.post('/login/', {'username': 'carlos.test', 'password': 'Password123!'}, follow=False)
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('/personal/', resp.url)
+
+    def test_cp_login_002_password_incorrecta(self):
+        """CP-LOGIN-002: Usuario válido y contraseña incorrecta -> Rechazado."""
+        c = Client()
+        resp = c.post('/login/', {'username': 'carlos.test', 'password': 'PasswordIncorrecta'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Credenciales inválidas')
+
+    def test_cp_login_003_usuario_inexistente(self):
+        """CP-LOGIN-003: Usuario inexistente -> Rechazado."""
+        c = Client()
+        resp = c.post('/login/', {'username': 'no.existe', 'password': 'Cualquiera123!'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Credenciales inválidas')
+
+    def test_cp_login_004_usuario_vacio(self):
+        """CP-LOGIN-004: Usuario vacío -> Validación de campo obligatorio."""
+        c = Client()
+        resp = c.post('/login/', {'username': '', 'password': 'Password123!'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'El nombre de usuario es obligatorio')
+
+    def test_cp_login_005_password_vacio(self):
+        """CP-LOGIN-005: Contraseña vacía -> Validación de campo obligatorio."""
+        c = Client()
+        resp = c.post('/login/', {'username': 'carlos.test', 'password': ''})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'La contraseña es obligatoria')
+
+    def test_cp_login_006_campos_vacios(self):
+        """CP-LOGIN-006: Usuario y contraseña vacíos -> Ambos obligatorios."""
+        c = Client()
+        resp = c.post('/login/', {'username': '', 'password': ''})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Usuario y contraseña son obligatorios')
+
+    def test_cp_login_007_usuario_inactivo(self):
+        """CP-LOGIN-007: Usuario inactivo/bloqueado -> Acceso rechazado."""
+        Usuario.objects.create_user(
+            username="bloqueado.test",
+            password="Password123!",
+            is_active=False
+        )
+        c = Client()
+        resp = c.post('/login/', {'username': 'bloqueado.test', 'password': 'Password123!'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Usuario bloqueado o inactivo')
+
+    def test_cp_login_008_formato_invalido_injection(self):
+        """CP-LOGIN-008: Datos con formato o caracteres inválidos (SQL Injection/XSS) -> Rechazo seguro."""
+        c = Client()
+        resp = c.post('/login/', {'username': "' OR '1'='1", 'password': "' OR '1'='1"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Credenciales inválidas')

@@ -154,6 +154,112 @@
     </div>
   </div>
 
+  <!-- Segunda Tabla: Historial de Actividades y Evidencias Registradas -->
+  <div class="card shadow-sm border-0 overflow-hidden">
+    <div class="card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-card-checklist text-danger"></i>
+          Registro de Actividades y Evidencias de Terreno
+        </h5>
+        <small class="text-secondary">Listado detallado de intervenciones ingresadas por el funcionario.</small>
+      </div>
+      <a href="{% url 'web_terreno' %}" class="btn btn-danger btn-sm fw-bold px-3 shadow-xs" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
+        <i class="bi bi-camera-fill me-1"></i> Nueva Evidencia
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="bg-light text-secondary text-uppercase border-bottom" style="font-size: 0.75rem; letter-spacing: 0.05rem;">
+          <tr>
+            <th class="ps-4 pe-3 py-3" style="min-width: 110px;">Fecha</th>
+            <th class="px-3 py-3" style="min-width: 180px;">Ubicación / Dirección</th>
+            <th class="px-3 py-3" style="min-width: 220px;">Tarea / Ítem</th>
+            <th class="px-3 py-3 text-center" style="min-width: 140px;">Evidencia Fotográfica</th>
+            <th class="text-center px-3 py-3" style="min-width: 140px;">Estado "Check"</th>
+            <th class="text-end ps-3 pe-4 py-3" style="min-width: 120px;">Código</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for act in actividades %}
+            <tr>
+              <td class="ps-4 pe-3 py-3 text-nowrap">
+                <div class="fw-bold text-dark">{{ act.fecha_actividad|date:"d/m/Y" }}</div>
+                <small class="text-secondary">{{ act.fecha_registro|date:"H:i" }} hrs</small>
+              </td>
+              <td class="px-3 py-3">
+                <div class="text-dark fw-semibold">
+                  <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                  {{ act.direccion|default:act.actividad_solicitud }}
+                </div>
+                {% if act.accion_ejecutada %}
+                  <small class="text-secondary d-block text-truncate" style="max-width: 280px;">{{ act.accion_ejecutada }}</small>
+                {% endif %}
+              </td>
+              <td class="px-3 py-3">
+                <span class="badge bg-light text-dark border mb-1">
+                  {{ act.item_medicion.nombre_item|default:"Actividad General" }}
+                </span>
+                {% if act.item_medicion %}
+                  <small class="text-secondary d-block" style="font-size: 0.72rem;">Ponderador: {{ act.item_medicion.ponderador }}%</small>
+                {% endif %}
+              </td>
+              <td class="px-3 py-3 text-center">
+                {% if act.evidencia %}
+                  <div class="d-inline-flex align-items-center gap-1">
+                    <img src="{{ act.evidencia.get_foto_url }}" class="rounded border shadow-xs" style="width: 42px; height: 42px; object-fit: cover;" alt="Foto">
+                    {% if act.evidencia.fotos_adicionales %}
+                      <span class="badge bg-secondary-subtle text-secondary border" title="{{ act.evidencia.fotos_adicionales|length }} fotos adicionales">
+                        +{{ act.evidencia.fotos_adicionales|length }}
+                      </span>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <span class="text-secondary small">Sin foto</span>
+                {% endif %}
+              </td>
+              <td class="text-center px-3 py-3">
+                {% if act.evidencia %}
+                  {% if act.evidencia.estado == 'APROBADA' %}
+                    <span class="badge bg-success-subtle text-success border border-success fw-bold px-2 py-1">
+                      <i class="bi bi-check2-circle me-1"></i> Aprobada
+                    </span>
+                  {% elif act.evidencia.estado == 'PENDIENTE' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning fw-bold px-2 py-1">
+                      <i class="bi bi-hourglass-split me-1"></i> En Revisión
+                    </span>
+                  {% else %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger fw-bold px-2 py-1">
+                      <i class="bi bi-x-circle me-1"></i> Rechazada
+                    </span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-secondary text-white">N/A</span>
+                {% endif %}
+              </td>
+              <td class="text-end ps-3 pe-4 py-3 font-monospace text-secondary fw-semibold">
+                {{ act.evidencia.codigo_verificador|default:"-" }}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-secondary py-4">
+                <i class="bi bi-inbox fs-3 d-block text-muted mb-2"></i>
+                No hay actividades registradas por este funcionario en el período.
+                <div class="mt-2">
+                  <a href="{% url 'web_terreno' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Registrar la primera actividad
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Tubo de Trabajo del Funcionario y Continuidad -->
   <div class="row g-3">
     <div class="col-12 col-md-6">

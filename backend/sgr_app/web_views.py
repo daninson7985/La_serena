@@ -22,9 +22,20 @@ def web_login(request):
         return redirect('web_dashboard')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
         requires_2fa = request.POST.get('requires_2fa') == 'on'
+
+        if not username and not password:
+            return render(request, 'login.html', {'error': 'Usuario y contraseña son obligatorios.'})
+        if not username:
+            return render(request, 'login.html', {'error': 'El nombre de usuario es obligatorio.'})
+        if not password:
+            return render(request, 'login.html', {'error': 'La contraseña es obligatoria.'})
+
+        user_obj = Usuario.objects.filter(username=username).first()
+        if user_obj and not user_obj.is_active:
+            return render(request, 'login.html', {'error': 'Usuario bloqueado o inactivo.'})
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -135,13 +146,19 @@ def web_personal(request):
         funcionario = todos_funcionarios.first()
 
     metricas = None
-    if funcionario and periodo:
-        metricas = calcular_metricas_funcionario(funcionario, periodo)
+    actividades = []
+    if funcionario:
+        actividades = Actividad.objects.filter(funcionario=funcionario).select_related(
+            'item_medicion', 'delegacion'
+        ).prefetch_related('evidencias').order_by('-fecha_registro')[:30]
+        if periodo:
+            metricas = calcular_metricas_funcionario(funcionario, periodo)
 
     return render(request, 'dashboard_personal.html', {
         'funcionario': funcionario,
         'todos_funcionarios': todos_funcionarios,
         'metricas': metricas,
+        'actividades': actividades,
     })
 
 def web_verificacion(request):

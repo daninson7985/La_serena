@@ -1,4 +1,4 @@
-﻿from datetime import date
+from datetime import date
 from django.utils import timezone
 from django.db.models import Count, Q
 from sgr_app.models import Actividad, Evidencia, ItemMedicion, PeriodoMedicion, Usuario, Delegacion, CompromisoAgenda
@@ -73,19 +73,19 @@ def calcular_metricas_funcionario(funcionario: Usuario, periodo: PeriodoMedicion
         # Solo actividades cuya evidencia esté APROBADA (RN-009, CA-01, CA-02)
         avance_aprobado = actividades_base.filter(
             item_medicion=item,
-            evidencia__estado=Evidencia.Estado.APROBADA
-        ).count()
+            evidencias__estado=Evidencia.Estado.APROBADA
+        ).distinct().count()
 
         # Evidencias en otros estados para seguimiento
         evidencias_pendientes = actividades_base.filter(
             item_medicion=item,
-            evidencia__estado=Evidencia.Estado.PENDIENTE
-        ).count()
+            evidencias__estado=Evidencia.Estado.PENDIENTE
+        ).distinct().count()
 
         evidencias_rechazadas = actividades_base.filter(
             item_medicion=item,
-            evidencia__estado=Evidencia.Estado.RECHAZADA
-        ).count()
+            evidencias__estado=Evidencia.Estado.RECHAZADA
+        ).distinct().count()
 
         # % Cumplimiento del ítem (RN-004)
         if item.meta_cuantitativa > 0:

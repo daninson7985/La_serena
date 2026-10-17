@@ -1,6 +1,21 @@
+"""
+Módulo de Modelos de Datos - Matriz SGR (Ilustre Municipalidad de La Serena)
+=============================================================================
+Este módulo define la estructura de datos relacional y los métodos del modelo
+de dominio y diagrama de clases UML (según especificación 'AjustesModelos.docx'
+y 'MÉTODOS DIAGRAMA DE CLASES.docx' de Soledad Valdebenito) para la gestión
+operativa, medición de cumplimiento territorial, evidencias fotográficas, casos
+sociales, incentivos y registro inmutable de auditoría.
+
+Soporta nomenclatura dual (snake_case y camelCase) para alineación 100% con los
+diagramas de clases y el estándar PEP-8 de Django.
+"""
+
 import secrets
 import string
 import hashlib
+import re
+from datetime import date
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -8,18 +23,131 @@ from django.core.exceptions import ValidationError
 
 
 def generar_codigo_evidencia(prefijo="SGR"):
+    """
+    Genera un código alfanumérico único para evidencias (Regla RN-010 y Criterio CA-05).
+    Excluye caracteres ambiguos ('O', 'I', '0', '1') para facilitar lectura en terreno.
+    Formato: [PREFIJO][6_ALFANUMERICOS] (ej: CIA9X7B2).
+    """
     chars = string.ascii_uppercase.replace('O', '').replace('I', '') + string.digits.replace('0', '').replace('1', '')
     aleatorio = ''.join(secrets.choice(chars) for _ in range(6))
     return f"{prefijo}{aleatorio}"
 
 
-class Delegacion(models.Model):
+# =============================================================================
+# 7. CLASE ROL
+# =============================================================================
+class Rol(models.Model):
+    """
+    Entidad de Roles y Privilegios en el modelo de dominio UML (Clase Rol).
+    """
+    nombre_rol = models.CharField(max_length=50, unique=True, default='OPERATIVO', verbose_name="Nombre del Rol")
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción de Permisos")
+    estado = models.BooleanField(default=True, verbose_name="Estado Activo")
+
+    class Meta:
+        db_table = 'Roles'
+        verbose_name = "Rol"
+        verbose_name_plural = "Roles"
+
+    def __str__(self):
+        return self.nombre_rol
+
+    @property
+    def nombre(self):
+        return self.nombre_rol
+
+    @nombre.setter
+    def nombre(self, val):
+        self.nombre_rol = val
+
+    def obtenerCantidadUsuarios(self) -> int:
+        """Retorna la cantidad total de funcionarios activos asociados a este rol."""
+        if hasattr(self, 'usuarios_rel'):
+            return self.usuarios_rel.filter(is_active=True).count()
+        return Usuario.objects.filter(rol=self.nombre_rol.upper(), is_active=True).count()
+
+    def tienePermiso(self, codigo_permiso: str) -> bool:
+        """Evalúa si el rol posee determinado permiso para autorizar una acción."""
+        if not self.estado:
+            return False
+        if self.nombre_rol.upper() in ["ADMIN", "ADMINISTRADOR"]:
+            return True
+        permisos_por_rol = {
+            "COORDINADOR": ["CREAR_META", "APROBAR_EVIDENCIA", "VER_DASHBOARD", "GESTIONAR_COORDINACION", "ACCESO_ADMINISTRADOR"],
+            "DELEGADO": ["APROBAR_EVIDENCIA", "VER_DASHBOARD", "GESTIONAR_DELEGACION"],
+            "OPERATIVO": ["REGISTRAR_ACTIVIDAD", "VER_DASHBOARD"],
+            "FUNCIONARIO": ["REGISTRAR_ACTIVIDAD", "VER_DASHBOARD"],
+        }
+        permisos_asignados = permisos_por_rol.get(self.nombre_rol.upper(), [])
+        return codigo_permiso.upper() in permisos_asignados
+
+
+# =============================================================================
+# 10. CLASE AREA
+# =============================================================================
+class Area(models.Model):
+    """
+    Área funcional municipal en el modelo de dominio UML (Clase Area).
+    """
     nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    estado = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Área"
+        verbose_name_plural = "Áreas"
+
+    def __str__(self):
+        return self.nombre
+
+    def obtenerCantidadFuncionarios(self) -> int:
+        """Retorna la cantidad de funcionarios activos asociados al área."""
+        return self.usuarios_area.filter(is_active=True).count() if hasattr(self, 'usuarios_area') else 0
+
+    def calcularCumplimientoArea(self) -> float:
+        """Calcula el porcentaje de avance promedio de las metas de todos los funcionarios pertenecientes a esta área."""
+        funcionarios = self.usuarios_area.filter(is_active=True) if hasattr(self, 'usuarios_area') else []
+        if not funcionarios:
+            return 0.0
+        total_avance = 0.0
+        conteo_metas = 0
+        for f in funcionarios:
+            metas = f.metas.all() if hasattr(f, 'metas') else []
+            for m in metas:
+                total_avance += m.calcular_meta() if hasattr(m, 'calcular_meta') else 0.0
+                conteo_metas += 1
+        if conteo_metas == 0:
+            return 0.0
+        return round(total_avance / conteo_metas, 2)
+
+    def activarArea(self) -> bool:
+        """Activa el área funcional."""
+        self.estado = True
+        self.save(update_fields=['estado'])
+        return True
+
+    def desactivarArea(self) -> bool:
+        """Desactiva el área sin borrar registros históricos."""
+        self.estado = False
+        self.save(update_fields=['estado'])
+        return True
+
+
+# =============================================================================
+# 8. CLASE DELEGACION
+# =============================================================================
+class Delegacion(models.Model):
+    """
+    Representa una de las 6 delegaciones municipales territoriales de La Serena (RF-003).
+    (Las Compañías, La Antena-La Florida, Centro, Avenida del Mar, Rural, La Pampa).
+    """
+    nombre = models.CharField(max_length=100, unique=True, verbose_name="Nombre Delegación")
     codigo = models.CharField(max_length=10, unique=True)
-    direccion = models.CharField(max_length=255, blank=True, null=True)
+    direccion = models.CharField(max_length=255, blank=True, null=True, verbose_name="Dirección Física")
     telefono = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-    activo = models.BooleanField(default=True)
+    activo = models.BooleanField(default=True, verbose_name="Estado Activo")
+    ambito = models.CharField(max_length=100, default="Urbano", verbose_name="Ámbito Territorio")
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -30,11 +158,102 @@ class Delegacion(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.codigo})"
 
+    @property
+    def estado(self):
+        return self.activo
 
+    @estado.setter
+    def estado(self, val):
+        self.activo = val
+
+    def activar_delegacion(self) -> bool:
+        self.activo = True
+        self.save(update_fields=['activo'])
+        return True
+
+    activarDelegacion = activar_delegacion
+
+    def desactivar_delegacion(self) -> bool:
+        self.activo = False
+        self.save(update_fields=['activo'])
+        return True
+
+    desactivarDelegacion = desactivar_delegacion
+
+    def calcularCumplimientoGlobal(self) -> float:
+        """Calcula el porcentaje de cumplimiento promediando el avance de todas las metas asociadas."""
+        metas = self.metas.all() if hasattr(self, 'metas') and self.metas.exists() else []
+        if not metas:
+            from sgr_app.services.calculos import calcular_resumen_delegacion
+            periodo = PeriodoMedicion.objects.filter(cerrado=False).first() or PeriodoMedicion.objects.first()
+            if periodo:
+                return calcular_resumen_delegacion(self, periodo).get('promedio_ponderado', 0.0)
+            return 0.0
+        total_avance = sum(m.calcular_meta() for m in metas)
+        return round(total_avance / len(metas), 2)
+
+    def obtenerResumenSemaforo(self) -> dict:
+        """Clasifica las metas de la delegación en niveles de semáforo (Verde, Amarillo, Rojo)."""
+        metas = self.metas.all() if hasattr(self, 'metas') and self.metas.exists() else []
+        resumen = {"VERDE": 0, "AMARILLO": 0, "ROJO": 0, "TOTAL": 0}
+        if not metas:
+            from sgr_app.services.calculos import calcular_resumen_delegacion
+            periodo = PeriodoMedicion.objects.filter(cerrado=False).first() or PeriodoMedicion.objects.first()
+            if periodo:
+                sem = calcular_resumen_delegacion(self, periodo).get('semaforo_promedio', 'ROJO')
+                if sem == 'AMBAR':
+                    sem = 'AMARILLO'
+                resumen[sem] = 1
+                resumen["TOTAL"] = 1
+            return resumen
+        for meta in metas:
+            avance = meta.calcular_meta()
+            if avance >= 80.0:
+                resumen["VERDE"] += 1
+            elif avance >= 50.0:
+                resumen["AMARILLO"] += 1
+            else:
+                resumen["ROJO"] += 1
+        resumen["TOTAL"] = len(metas)
+        return resumen
+
+
+# =============================================================================
+# CLASE DEPARTAMENTO
+# =============================================================================
+class Departamento(models.Model):
+    """
+    Unidad organizativa administrativa dentro de una delegación (Clase Departamento).
+    """
+    nombre_departamento = models.CharField(max_length=150, verbose_name="Nombre del Departamento")
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
+    delegacion = models.ForeignKey(Delegacion, on_delete=models.CASCADE, related_name='departamentos', verbose_name="Delegación Perteneciente")
+
+    class Meta:
+        db_table = 'Departamentos'
+        verbose_name = 'Departamento'
+        verbose_name_plural = 'Departamentos'
+
+    def __str__(self):
+        return f"{self.nombre_departamento} - {self.delegacion.nombre}"
+
+    @property
+    def nombre(self):
+        return self.nombre_departamento
+
+    @nombre.setter
+    def nombre(self, val):
+        self.nombre_departamento = val
+
+
+# =============================================================================
+# 9. CLASE CARGO
+# =============================================================================
 class Cargo(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     activo = models.BooleanField(default=True)
+    departamento = models.ForeignKey(Departamento, on_delete=models.SET_NULL, null=True, blank=True, related_name='cargos', verbose_name="Departamento Asignado")
 
     class Meta:
         verbose_name = "Cargo"
@@ -43,8 +262,47 @@ class Cargo(models.Model):
     def __str__(self):
         return self.nombre
 
+    @property
+    def estado(self):
+        return self.activo
 
+    @estado.setter
+    def estado(self, val):
+        self.activo = val
+
+    @property
+    def nombre_cargo(self):
+        return self.nombre
+
+    @property
+    def nombreCargo(self):
+        return self.nombre
+
+    def obtenerCantidadFuncionarios(self) -> int:
+        """Retorna la cantidad total de funcionarios activos asociados a este cargo."""
+        return self.usuarios.filter(is_active=True).count()
+
+    def activarCargo(self) -> bool:
+        """Activa el puesto laboral en el sistema."""
+        self.activo = True
+        self.save(update_fields=['activo'])
+        return True
+
+    def desactivarCargo(self) -> bool:
+        """Desactiva el puesto laboral sin eliminar su historial."""
+        self.activo = False
+        self.save(update_fields=['activo'])
+        return True
+
+
+# =============================================================================
+# 5. CLASE FUNCIONARIO / USUARIO
+# =============================================================================
 class Usuario(AbstractUser):
+    """
+    Usuario institucional municipal con control de roles (RBAC) y soporte 2FA (RF-001, RF-002, RNF-008).
+    Roles: Administrador, Coordinador Comunal, Delegado Municipal, Funcionario de Terreno.
+    """
     class Rol(models.TextChoices):
         ADMIN = 'ADMIN', 'Administrador'
         COORDINADOR = 'COORDINADOR', 'Coordinador Comunal'
@@ -52,6 +310,8 @@ class Usuario(AbstractUser):
         FUNCIONARIO = 'FUNCIONARIO', 'Funcionario de Terreno'
 
     rol = models.CharField(max_length=20, choices=Rol.choices, default=Rol.FUNCIONARIO)
+    rol_entidad = models.ForeignKey('Rol', on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios_rel')
+    area_entidad = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios_area')
     cargo = models.ForeignKey(Cargo, on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios')
     delegacion = models.ForeignKey(Delegacion, on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios')
     telefono = models.CharField(max_length=30, blank=True, null=True)
@@ -67,20 +327,242 @@ class Usuario(AbstractUser):
     def __str__(self):
         return f"{self.get_full_name() or self.username} [{self.get_rol_display()}]"
 
+    @property
+    def estado(self):
+        return self.is_active
 
-class PeriodoMedicion(models.Model):
-    nombre = models.CharField(max_length=100, unique=True, help_text="Ej: Trimestre 3 - 2026")
-    fecha_inicio = models.DateField()
-    fecha_termino = models.DateField()
-    dias_computables = models.IntegerField(default=90)
-    cerrado = models.BooleanField(default=False)
-    umbral_colectivo = models.FloatField(default=80.0, help_text="Umbral mínimo colectivo (%)")
-    tope_cumplimiento = models.FloatField(default=150.0, help_text="Tope máximo de cumplimiento (%)")
+    @estado.setter
+    def estado(self, val):
+        self.is_active = val
+
+    @property
+    def run(self):
+        return self.rut_anonimizado
+
+    @run.setter
+    def run(self, val):
+        self.rut_anonimizado = val
+
+    @property
+    def correo(self):
+        return self.email
+
+    @correo.setter
+    def correo(self, val):
+        self.email = val
+
+    @property
+    def nombre(self):
+        return self.first_name
+
+    @nombre.setter
+    def nombre(self, val):
+        self.first_name = val
+
+    @property
+    def apellido(self):
+        return self.last_name
+
+    @apellido.setter
+    def apellido(self, val):
+        self.last_name = val
+
+    @property
+    def apellidoPaterno(self):
+        return self.last_name
+
+    def es_admin(self) -> bool:
+        """Verifica si el funcionario cuenta con privilegios administrativos."""
+        if self.rol_entidad:
+            return self.rol_entidad.tienePermiso("ACCESO_ADMINISTRADOR")
+        return self.rol == self.Rol.ADMIN or self.is_superuser
+
+    def es_coordinador_o_delegado(self) -> bool:
+        """Determina si el funcionario tiene perfil de supervisión territorial."""
+        if self.rol_entidad:
+            return (self.rol_entidad.tienePermiso("GESTIONAR_COORDINACION") or self.rol_entidad.tienePermiso("GESTIONAR_DELEGACION"))
+        return self.rol in [self.Rol.COORDINADOR, self.Rol.DELEGADO]
+
+    def puede_aprobar_ajustes(self) -> bool:
+        """Consulta si el rol asociado al funcionario permite aprobar ajustes de incentivo."""
+        return self.es_admin() or self.rol == self.Rol.COORDINADOR
+
+    def validarRun(self) -> bool:
+        """Valida el RUN chileno usando el algoritmo estándar Módulo 11."""
+        if not self.rut_anonimizado:
+            return False
+        clean_run = re.sub(r'[^0-9kK]', '', self.rut_anonimizado)
+        if len(clean_run) < 2:
+            return False
+        body, dv = clean_run[:-1], clean_run[-1].upper()
+        try:
+            suma = 0
+            multiplicador = 2
+            for c in reversed(body):
+                suma += int(c) * multiplicador
+                multiplicador = 2 if multiplicador == 7 else multiplicador + 1
+            res = 11 - (suma % 11)
+            dv_esperado = 'K' if res == 10 else '0' if res == 11 else str(res)
+            return dv == dv_esperado
+        except ValueError:
+            return False
+
+    def registrar_actividad(self, fecha_solicitud=None, solicitud_problema="", accion="", item=None, solicitante=None):
+        """Crea y asocia una nueva actividad transaccional al funcionario."""
+        if not fecha_solicitud:
+            fecha_solicitud = timezone.localdate()
+        actividad = Actividad.objects.create(
+            funcionario=self,
+            delegacion=self.delegacion or Delegacion.objects.first(),
+            fecha_actividad=fecha_solicitud,
+            solicitud_problema=solicitud_problema,
+            actividad_solicitud=solicitud_problema or "Actividad en terreno",
+            accion=accion,
+            accion_ejecutada=accion or "Gestión realizada",
+            item=item,
+            item_medicion=item,
+            solicitante=solicitante if isinstance(solicitante, Solicitante) else None,
+            contacto_nombre=str(solicitante) if solicitante else ""
+        )
+        return actividad
+
+    registrarActividad = registrar_actividad
+
+    def obtenerCumplimientoGeneral(self) -> float:
+        """Calcula el porcentaje de cumplimiento promediando el avance de sus metas asociadas."""
+        metas = self.metas.all() if hasattr(self, 'metas') and self.metas.exists() else []
+        if not metas:
+            from sgr_app.services.calculos import calcular_metricas_funcionario
+            periodo = PeriodoMedicion.objects.filter(cerrado=False).first() or PeriodoMedicion.objects.first()
+            if periodo:
+                return calcular_metricas_funcionario(self, periodo).get('total_ponderado_pct', 0.0)
+            return 0.0
+        total_porcentaje = sum(meta.calcular_meta() for meta in metas)
+        return round(total_porcentaje / len(metas), 2)
+
+    def ver_dashboard_personal(self) -> dict:
+        """Devuelve las métricas clave del funcionario para su panel inicial."""
+        actividades_mes = self.actividades.filter(
+            fecha_registro__month=timezone.now().month
+        ).count()
+        return {
+            "funcionario": f"{self.first_name} {self.last_name}",
+            "actividades_realizadas_mes": actividades_mes,
+            "cumplimiento_general": self.obtenerCumplimientoGeneral(),
+            "estado_cuenta": "ACTIVO" if self.is_active else "INACTIVO"
+        }
+
+    verDashboardPersonal = ver_dashboard_personal
+
+
+# =============================================================================
+# 4. CLASE SOLICITANTE
+# =============================================================================
+class Solicitante(models.Model):
+    """
+    Persona o entidad requirente de intervenciones en terreno (Clase Solicitante).
+    """
+    TIPO_SOLICITANTE_CHOICES = [
+        ('VECINO', 'Vecino / Particular'),
+        ('DIRIGENTE', 'Dirigente Social'),
+        ('INSTITUCION', 'Junta de Vecinos / Organización'),
+        ('INTERNO', 'Unidad Interna Municipal'),
+    ]
+
+    run = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    nombre = models.CharField(max_length=100, verbose_name="Nombre")
+    apellido = models.CharField(max_length=100, default='', verbose_name="Apellido")
+    tipo_solicitante = models.CharField(max_length=30, choices=TIPO_SOLICITANTE_CHOICES, default='VECINO', verbose_name="Tipo de Solicitante")
+    telefono = models.CharField(max_length=15, blank=True, null=True, verbose_name="Teléfono de Contacto")
+    correo = models.EmailField(blank=True, null=True, verbose_name="Correo Electrónico")
+    direccion = models.CharField(max_length=255, blank=True, null=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Período de Medición"
-        verbose_name_plural = "Períodos de Medición"
+        db_table = 'Solicitantes'
+        verbose_name = "Solicitante"
+        verbose_name_plural = "Solicitantes"
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellido}".strip() or f"Solicitante #{self.id}"
+
+    @property
+    def tipoSolicitante(self):
+        return self.tipo_solicitante
+
+    @tipoSolicitante.setter
+    def tipoSolicitante(self, val):
+        self.tipo_solicitante = val
+
+    def validarRun(self) -> bool:
+        """Valida el RUN chileno usando el algoritmo estándar Módulo 11."""
+        if not self.run:
+            return False
+        clean_run = re.sub(r'[^0-9kK]', '', self.run)
+        if len(clean_run) < 2:
+            return False
+        body, dv = clean_run[:-1], clean_run[-1].upper()
+        try:
+            suma = 0
+            multiplicador = 2
+            for c in reversed(body):
+                suma += int(c) * multiplicador
+                multiplicador = 2 if multiplicador == 7 else multiplicador + 1
+            res = 11 - (suma % 11)
+            dv_esperado = 'K' if res == 10 else '0' if res == 11 else str(res)
+            return dv == dv_esperado
+        except ValueError:
+            return False
+
+    def obtener_historial(self):
+        """Devuelve todas las actividades vinculadas a este solicitante."""
+        if hasattr(self, 'actividades') and self.actividades.exists():
+            return self.actividades.all().order_by('-fecha_actividad')
+        return Actividad.objects.filter(contacto_nombre__icontains=self.nombre).order_by('-fecha_registro')
+
+    obtenerHistorial = obtener_historial
+
+    def crear_contacto(self):
+        self.save()
+
+    crearContacto = crear_contacto
+
+    def modificar_contacto(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        self.save()
+
+    modificarContacto = modificar_contacto
+
+    def eliminar_contacto(self):
+        self.delete()
+
+    eliminarContacto = eliminar_contacto
+
+
+# =============================================================================
+# 13. CLASE PERIODO / PERIODOMEDICION
+# =============================================================================
+class PeriodoMedicion(models.Model):
+    """
+    Período trimestral de evaluación con cálculo automático de días computables (RF-006, RN-007).
+    """
+    nombre = models.CharField(max_length=100, unique=True, help_text="Ej: Trimestre 3 - 2026")
+    fecha_inicio = models.DateField(default=date(2026, 7, 1), verbose_name='Fecha de Inicio')
+    fecha_termino = models.DateField(default=date(2026, 9, 30), verbose_name='Fecha de Término')
+    dias_computables = models.IntegerField(default=92, verbose_name='Días Computables')
+    cerrado = models.BooleanField(default=False, verbose_name='Período Cerrado')
+    umbral_verde = models.FloatField(default=80.0, verbose_name='Umbral Verde (%)')
+    umbral_ambar = models.FloatField(default=50.0, verbose_name='Umbral Ámbar (%)')
+    umbral_colectivo = models.FloatField(default=80.0, help_text="Umbral mínimo colectivo (%)")
+    tope_cumplimiento = models.FloatField(default=150.0, verbose_name='Tope Cumplimiento (%)')
+    version_de_parametro = models.CharField(max_length=50, default="1.0", verbose_name='Versión de Parámetro')
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Periodos'
+        verbose_name = "Período"
+        verbose_name_plural = "Períodos"
         ordering = ['-fecha_inicio']
 
     def clean(self):
@@ -94,10 +576,121 @@ class PeriodoMedicion(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        estado = "Cerrado" if self.cerrado else "Activo"
-        return f"{self.nombre} ({estado})"
+        return f"{self.nombre} ({self.fecha_inicio} al {self.fecha_termino})"
+
+    # Aliases de Atributos UML / Snake_case
+    @property
+    def inicio_periodo(self):
+        return self.fecha_inicio
+
+    @inicio_periodo.setter
+    def inicio_periodo(self, val):
+        self.fecha_inicio = val
+
+    @property
+    def termino_periodo(self):
+        return self.fecha_termino
+
+    @termino_periodo.setter
+    def termino_periodo(self, val):
+        self.fecha_termino = val
+
+    @property
+    def inicioPeriodo(self):
+        return self.fecha_inicio
+
+    @property
+    def terminoPeriodo(self):
+        return self.fecha_termino
+
+    @property
+    def diasComputables(self):
+        return self.dias_computables
+
+    @property
+    def umbralVerde(self):
+        return self.umbral_verde
+
+    @property
+    def umbralAmbar(self):
+        return self.umbral_ambar
+
+    @property
+    def topeCumplimiento(self):
+        return self.tope_cumplimiento
+
+    @property
+    def versionDeParametro(self):
+        return self.version_de_parametro
+
+    # Métodos UML / Snake_case
+    def vigencia_fecha(self, fecha: date = None) -> bool:
+        """Verifica si la fecha actual está dentro del rango del período."""
+        if fecha is None:
+            fecha = timezone.now().date()
+        return self.fecha_inicio <= fecha <= self.fecha_termino
+
+    vigenciaFecha = vigencia_fecha
+
+    def estaActivo(self) -> bool:
+        return not self.cerrado and self.vigencia_fecha()
+
+    def calcular_dias_transcurridos(self) -> int:
+        """Calcula cuántos días computables han transcurrido a la fecha de hoy."""
+        hoy = timezone.now().date()
+        if hoy < self.fecha_inicio:
+            return 0
+        if hoy > self.fecha_termino:
+            return self.dias_computables
+        return (hoy - self.fecha_inicio).days + 1
+
+    calcularDiasTranscurridos = calcular_dias_transcurridos
+
+    def calcular_meta_esperada_al_dia(self, valorMeta: float = None) -> float:
+        """RN-007 / RF-026: Calcula el % acumulado esperado según los días transcurridos."""
+        if self.dias_computables == 0:
+            return 0.0
+        dias_pasados = self.calcular_dias_transcurridos()
+        porcentaje = (dias_pasados / self.dias_computables) * 100.0
+        pct_esperado = min(porcentaje, 100.0)
+        if valorMeta is not None:
+            return round((valorMeta * pct_esperado) / 100.0, 2)
+        return round(pct_esperado, 2)
+
+    calcularMetaEsperadaAlDia = calcular_meta_esperada_al_dia
+
+    def evaluar_cumplimiento(self, porcentaje_avance: float) -> str:
+        """RN-008 / RF-027: Evalúa el porcentaje respecto al esperado y asigna el color."""
+        meta_esperada = self.calcular_meta_esperada_al_dia()
+        if meta_esperada > 0:
+            porcentaje_evaluado = (porcentaje_avance / meta_esperada) * 100.0
+        else:
+            porcentaje_evaluado = porcentaje_avance
+
+        # Si el avance directo ya supera el umbral verde, califica como VERDE
+        if porcentaje_avance >= self.umbral_verde or porcentaje_evaluado >= self.umbral_verde:
+            return 'VERDE'
+        elif porcentaje_avance >= self.umbral_ambar or porcentaje_evaluado >= self.umbral_ambar:
+            return 'AMBAR'
+        else:
+            return 'ROJO'
+
+    def evaluarCumplimiento(self, porcentaje: float) -> str:
+        res = self.evaluar_cumplimiento(porcentaje)
+        return "AMARILLO" if res == "AMBAR" else res
+
+    def cerrar_periodo(self) -> bool:
+        """RN-013: Bloquea el período impidiendo futuras modificaciones."""
+        self.cerrado = True
+        self.save(update_fields=['cerrado'])
+        return True
+
+    cerrarPeriodo = cerrar_periodo
 
 
+# =============================================================================
+# CATÁLOGO DE SERVICIOS
+# =============================================================================
 class CatalogoServicio(models.Model):
     codigo = models.CharField(max_length=30, unique=True)
     nombre = models.CharField(max_length=150)
@@ -112,19 +705,35 @@ class CatalogoServicio(models.Model):
         return f"[{self.codigo}] {self.nombre}"
 
 
+# =============================================================================
+# 11. CLASE ITEM / ITEMMEDICION
+# =============================================================================
 class ItemMedicion(models.Model):
+    """
+    Entidad que representa las prestaciones o bienes medibles (Clase Item).
+    """
+    TIPO_UNIDAD_CHOICES = [
+        ('UNIDAD', 'Unidades'),
+        ('ATENCION', 'Atenciones'),
+        ('OPERATIVO', 'Operativos'),
+        ('PORCENTAJE', 'Porcentaje'),
+        ('HORA', 'Horas'),
+    ]
+
     cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE, related_name='items_medicion')
     periodo = models.ForeignKey(PeriodoMedicion, on_delete=models.CASCADE, related_name='items_medicion')
-    nombre_item = models.CharField(max_length=150)
-    descripcion = models.TextField(blank=True, null=True)
+    nombre_item = models.CharField(max_length=150, verbose_name="Nombre del Ítem")
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción de la Prestación")
+    tipo_unidad = models.CharField(max_length=20, choices=TIPO_UNIDAD_CHOICES, default='UNIDAD', verbose_name="Unidad de Medida")
     meta_cuantitativa = models.FloatField(default=1.0, help_text="Meta esperada en el período (>0)")
     ponderador = models.FloatField(default=25.0, help_text="Porcentaje de peso ponderado (0 a 100)")
     unidad_medida = models.CharField(max_length=50, default="Actividades")
     activo = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = "Ítem de Medición"
-        verbose_name_plural = "Ítems de Medición"
+        db_table = 'Items'
+        verbose_name = "Ítem"
+        verbose_name_plural = "Ítems"
         unique_together = ('cargo', 'periodo', 'nombre_item')
 
     def clean(self):
@@ -140,58 +749,70 @@ class ItemMedicion(models.Model):
     def __str__(self):
         return f"{self.nombre_item} ({self.cargo.nombre} - {self.ponderador}%)"
 
+    @property
+    def nombre(self):
+        return self.nombre_item
 
-class CompromisoAgenda(models.Model):
-    class Estado(models.TextChoices):
-        INGRESADO = 'INGRESADO', 'Ingresado'
-        PENDIENTE = 'PENDIENTE', 'Pendiente'
-        EN_PROCESO = 'EN_PROCESO', 'En Proceso'
-        REALIZADO = 'REALIZADO', 'Realizado'
+    @property
+    def tipoUnidad(self):
+        return self.tipo_unidad
 
-    solicitante = models.CharField(max_length=150, help_text="Nombre anonimizado de vecino u organización")
-    delegacion = models.ForeignKey(Delegacion, on_delete=models.CASCADE, related_name='compromisos')
-    responsable = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='compromisos_asignados')
-    fecha_registro = models.DateTimeField(auto_now_add=True)
-    fecha_comprometida = models.DateField()
-    area_apoyo = models.CharField(max_length=100, blank=True, null=True, help_text="Área interna de apoyo")
-    descripcion = models.TextField()
-    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.EN_PROCESO)
-    observaciones = models.TextField(blank=True, null=True)
-    creado_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='compromisos_creados')
-    actualizado_en = models.DateTimeField(auto_now=True)
+    @property
+    def estado(self):
+        return self.activo
 
-    class Meta:
-        verbose_name = "Compromiso de Agenda"
-        verbose_name_plural = "Compromisos de Agenda"
-        ordering = ['fecha_comprometida']
+    @estado.setter
+    def estado(self, val):
+        self.activo = val
 
-    def __str__(self):
-        return f"[{self.estado}] {self.solicitante} - {self.delegacion.codigo} ({self.fecha_comprometida})"
+    def obtenerCantidadMetas(self) -> int:
+        return self.metas_rel.filter(vigencia=True).count() if hasattr(self, 'metas_rel') else 0
+
+    def activarItem(self) -> bool:
+        self.activo = True
+        self.save(update_fields=['activo'])
+        return True
+
+    def desactivarItem(self) -> bool:
+        self.activo = False
+        self.save(update_fields=['activo'])
+        return True
 
 
+# =============================================================================
+# 1. CLASE ACTIVIDAD
+# =============================================================================
 class Actividad(models.Model):
+    """
+    Entidad transaccional central que registra las ejecuciones concretas (Clase Actividad).
+    """
     fecha_registro = models.DateTimeField(auto_now_add=True, help_text="Fecha y hora generada por el servidor")
-    fecha_actividad = models.DateField(default=timezone.localdate, help_text="Fecha de realización")
-    funcionario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='actividades')
+    fecha_actividad = models.DateField(default=timezone.localdate, verbose_name="Fecha de Ejecución")
+    funcionario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='actividades', verbose_name="Funcionario Ejecutor")
     delegacion = models.ForeignKey(Delegacion, on_delete=models.CASCADE, related_name='actividades')
-    item_medicion = models.ForeignKey(ItemMedicion, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades')
+    item = models.ForeignKey(ItemMedicion, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades', verbose_name="Ítem Catálogo")
+    item_medicion = models.ForeignKey(ItemMedicion, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades_legacy')
     catalogo_servicio = models.ForeignKey(CatalogoServicio, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades')
-    
-    actividad_solicitud = models.CharField(max_length=255, help_text="Problema atendido o solicitud")
-    accion_ejecutada = models.TextField(help_text="Acción desarrollada")
+    solicitante = models.ForeignKey(Solicitante, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades', verbose_name="Solicitante / Beneficiario")
+
+    solicitud_problema = models.TextField(blank=True, default='', verbose_name="Solicitud o Problema Detectado")
+    actividad_solicitud = models.CharField(max_length=255, blank=True, default='', help_text="Problema atendido o solicitud")
+    accion = models.TextField(blank=True, default='', verbose_name="Acción / Gestión Realizada")
+    accion_ejecutada = models.TextField(blank=True, default='', help_text="Acción desarrollada")
     direccion = models.CharField(max_length=255, blank=True, null=True, help_text="Dirección o sector de la intervención")
     contacto_nombre = models.CharField(max_length=150, blank=True, null=True, help_text="Nombre de referencia anonimizado")
     contacto_telefono = models.CharField(max_length=50, blank=True, null=True, help_text="Teléfono anonimizado")
-    
+
     latitud = models.FloatField(blank=True, null=True)
     longitud = models.FloatField(blank=True, null=True)
-    
-    compromiso_agenda = models.ForeignKey(CompromisoAgenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades_derivadas')
-    
+
+    compromiso_agenda = models.ForeignKey('CompromisoAgenda', on_delete=models.SET_NULL, null=True, blank=True, related_name='actividades_derivadas')
+
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'Actividades'
         verbose_name = "Actividad"
         verbose_name_plural = "Actividades"
         ordering = ['-fecha_registro']
@@ -199,36 +820,247 @@ class Actividad(models.Model):
     def __str__(self):
         return f"Actividad #{self.id} - {self.funcionario.username} ({self.fecha_actividad})"
 
+    @property
+    def fechaActividad(self):
+        return self.fecha_actividad
 
+    @property
+    def solicitudProblema(self):
+        return self.solicitud_problema or self.actividad_solicitud
+
+    def asociar_solicitante(self, solicitante_obj):
+        """Asignar formalmente el vecino, institución o beneficiario."""
+        if isinstance(solicitante_obj, Solicitante):
+            self.solicitante = solicitante_obj
+            self.contacto_nombre = str(solicitante_obj)
+        else:
+            self.contacto_nombre = str(solicitante_obj)
+        self.save()
+
+    asociarSolicitante = asociar_solicitante
+
+    def generar_compromiso(self, datos_compromiso=None, **kwargs):
+        """Crear un compromiso de seguimiento derivado de esta actividad."""
+        datos = {}
+        if isinstance(datos_compromiso, dict):
+            datos.update(datos_compromiso)
+        datos.update(kwargs)
+
+        origen = datos.get('origen', self.contacto_nombre or 'Solicitante')
+        territorio = datos.get('territorio', self.delegacion.nombre)
+        fecha_comp = datos.get('fecha_compromiso', datos.get('fecha_comprometida', timezone.localdate()))
+        area_apoyo = datos.get('area_apoyo', 'Operaciones')
+        obs = datos.get('observacion', datos.get('observaciones', ''))
+
+        deleg = self.delegacion
+        if hasattr(territorio, 'pk'):
+            deleg = territorio
+
+        comp = CompromisoAgenda.objects.create(
+            actividad=self,
+            solicitante=str(origen),
+            origen=str(origen),
+            territorio=str(territorio) if not hasattr(territorio, 'nombre') else territorio.nombre,
+            delegacion=deleg,
+            responsable=self.funcionario,
+            fecha_compromiso=fecha_comp,
+            fecha_comprometida=fecha_comp,
+            area_apoyo=area_apoyo,
+            estado='PENDIENTE',
+            observacion=obs,
+            observaciones=obs,
+            creado_por=self.funcionario
+        )
+        self.compromiso_agenda = comp
+        self.save(update_fields=['compromiso_agenda'])
+        return comp
+
+    def generarCompromiso(self, origen, territorio, fecha_compromiso, area_apoyo, observacion=""):
+        return self.generar_compromiso(
+            origen=origen, territorio=territorio, fecha_compromiso=fecha_compromiso,
+            area_apoyo=area_apoyo, observacion=observacion
+        )
+
+    def adjuntar_evidencia(self, archivo_file, descripcion=""):
+        """Cargar y vincular un archivo de respaldo a la clase Evidencia."""
+        evidencia, created = Evidencia.objects.get_or_create(
+            actividad=self,
+            defaults={
+                'archivo': archivo_file if hasattr(archivo_file, 'read') else None,
+                'archivo_foto': archivo_file if hasattr(archivo_file, 'read') else None,
+                'url_foto_simulada': archivo_file if isinstance(archivo_file, str) else '',
+                'observacion': descripcion,
+                'estado': Evidencia.Estado.PENDIENTE
+            }
+        )
+        if not created:
+            if hasattr(archivo_file, 'read'):
+                evidencia.archivo = archivo_file
+                evidencia.archivo_foto = archivo_file
+            elif isinstance(archivo_file, str):
+                evidencia.url_foto_simulada = archivo_file
+            evidencia.observacion = descripcion
+            evidencia.save()
+        return evidencia
+
+    @property
+    def evidencia(self):
+        return self.evidencias.first()
+
+    adjuntarEvidencia = adjuntar_evidencia
+
+
+# =============================================================================
+# 2. CLASE COMPROMISO / COMPROMISOAGENDA
+# =============================================================================
+class CompromisoAgenda(models.Model):
+    """
+    Entidad de seguimiento operativo asociada a una actividad (Clase Compromiso).
+    """
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente'),
+        ('EN_PROCESO', 'En Proceso'),
+        ('CUMPLIDO', 'Cumplido'),
+        ('REALIZADO', 'Realizado'),
+        ('VENCIDO', 'Vencido'),
+    ]
+
+    class Estado(models.TextChoices):
+        INGRESADO = 'INGRESADO', 'Ingresado'
+        PENDIENTE = 'PENDIENTE', 'Pendiente'
+        EN_PROCESO = 'EN_PROCESO', 'En Proceso'
+        REALIZADO = 'REALIZADO', 'Realizado'
+
+    origen = models.CharField(max_length=100, default='Vecino', verbose_name="Origen del Compromiso")
+    solicitante = models.CharField(max_length=150, help_text="Nombre anonimizado de vecino u organización")
+    territorio = models.CharField(max_length=150, default='La Serena', verbose_name="Territorio / Sector")
+    delegacion = models.ForeignKey(Delegacion, on_delete=models.CASCADE, related_name='compromisos')
+    responsable = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='compromisos_asignados')
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    fecha_compromiso = models.DateField(default=timezone.localdate, verbose_name="Fecha Comprometida")
+    fecha_comprometida = models.DateField(default=timezone.localdate)
+    area_apoyo = models.CharField(max_length=150, default='Operaciones', verbose_name="Área / Unidad de Apoyo")
+    descripcion = models.TextField(blank=True, default='')
+    estado = models.CharField(max_length=30, choices=ESTADO_CHOICES, default='PENDIENTE', verbose_name="Estado")
+    observacion = models.TextField(blank=True, null=True, verbose_name="Observaciones / Avances")
+    observaciones = models.TextField(blank=True, null=True)
+    actividad = models.ForeignKey(Actividad, on_delete=models.CASCADE, null=True, blank=True, related_name='compromisos', verbose_name="Actividad Origen")
+    creado_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='compromisos_creados')
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Compromisos'
+        verbose_name = "Compromiso"
+        verbose_name_plural = "Compromisos"
+        ordering = ['fecha_compromiso']
+
+    def __str__(self):
+        return f"Compromiso #{self.id} - {self.territorio} ({self.estado})"
+
+    @property
+    def fechaCompromiso(self):
+        return self.fecha_compromiso
+
+    @fechaCompromiso.setter
+    def fechaCompromiso(self, val):
+        self.fecha_compromiso = val
+        self.fecha_comprometida = val
+
+    @property
+    def areaApoyo(self):
+        return self.area_apoyo
+
+    @areaApoyo.setter
+    def areaApoyo(self, val):
+        self.area_apoyo = val
+
+    @property
+    def montoEjecutado(self):
+        return 1.0 if self.estado in ['REALIZADO', 'COMPLETADO', 'CUMPLIDO'] else 0.0
+
+    def actualizar_estado(self, nuevo_estado: str, observacion_nueva=""):
+        """Modificar la fase del compromiso y registrar observación."""
+        self.estado = nuevo_estado
+        if observacion_nueva:
+            self.observacion = f"{self.observacion or ''}\n[{date.today()}]: {observacion_nueva}"
+            self.observaciones = self.observacion
+        self.save()
+
+    actualizarEstado = actualizar_estado
+
+    def fecha_vencida(self) -> bool:
+        """Evalúa si la fecha límite ya sobrepasó hoy sin haber sido cumplido."""
+        if self.estado in ['CUMPLIDO', 'REALIZADO', 'COMPLETADO', 'CANCELADO']:
+            return False
+        return self.fecha_compromiso < date.today()
+
+    fechaVencida = fecha_vencida
+
+    def calcularDiasAtraso(self) -> int:
+        if self.fecha_vencida():
+            diferencia = date.today() - self.fecha_compromiso
+            return diferencia.days
+        return 0
+
+    def reprogramarFecha(self, nueva_fecha: date, motivo: str):
+        fecha_anterior = self.fecha_compromiso
+        self.fecha_compromiso = nueva_fecha
+        self.fecha_comprometida = nueva_fecha
+        self.estado = "EN_PROCESO"
+        nota = f"\n[Reprogramado el {date.today()}]: Fecha anterior ({fecha_anterior}) -> Nueva fecha ({nueva_fecha}). Motivo: {motivo}"
+        self.observacion = (self.observacion or "") + nota
+        self.observaciones = self.observacion
+        self.save()
+
+    def marcarCompletado(self):
+        self.estado = "REALIZADO"
+        self.save()
+
+
+# =============================================================================
+# 3. CLASE EVIDENCIA
+# =============================================================================
 class Evidencia(models.Model):
+    """
+    Entidad que almacena los medios de prueba y archivos adjuntos (Clase Evidencia).
+    """
     class Estado(models.TextChoices):
         PENDIENTE = 'PENDIENTE', 'Pendiente de Validación'
         APROBADA = 'APROBADA', 'Aprobada'
         RECHAZADA = 'RECHAZADA', 'Rechazada'
         CORRECCION = 'CORRECCION', 'Requiere Corrección'
 
-    actividad = models.OneToOneField(Actividad, on_delete=models.CASCADE, related_name='evidencia')
+    actividad = models.ForeignKey(Actividad, on_delete=models.CASCADE, related_name='evidencias', verbose_name="Actividad Asociada")
     codigo_verificador = models.CharField(max_length=30, unique=True, editable=False, db_index=True)
+    archivo = models.FileField(upload_to='evidencias/%Y/%m/', blank=True, null=True, verbose_name="Archivo Adjunto")
     archivo_foto = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
     archivo_foto_2 = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
     archivo_foto_3 = models.ImageField(upload_to='evidencias/%Y/%m/', blank=True, null=True)
     url_foto_simulada = models.URLField(max_length=500, blank=True, null=True)
     url_foto_simulada_2 = models.URLField(max_length=500, blank=True, null=True)
     url_foto_simulada_3 = models.URLField(max_length=500, blank=True, null=True)
+    fecha_evidencia = models.DateField(default=timezone.now, blank=True, verbose_name="Fecha de Carga")
+    metadatos = models.JSONField(blank=True, null=True, verbose_name="Metadatos (GPS, formato, peso)")
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE, verbose_name="Estado de Validación")
+    observacion = models.TextField(blank=True, null=True, verbose_name="Observacion")
+    observacion_rechazo = models.TextField(blank=True, null=True)
     hash_sha256 = models.CharField(max_length=64, blank=True, null=True)
-    
-    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
     verificador = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='evidencias_validadas')
     fecha_validacion = models.DateTimeField(null=True, blank=True)
-    observacion = models.TextField(blank=True, null=True)
     fecha_subida = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Evidencia Fotográfica"
-        verbose_name_plural = "Evidencias Fotográficas"
+        db_table = 'Evidencias'
+        verbose_name = "Evidencia"
+        verbose_name_plural = "Evidencias"
 
     @property
     def get_foto_url(self):
+        if self.archivo:
+            try:
+                return self.archivo.url
+            except Exception:
+                pass
         if self.archivo_foto:
             try:
                 return self.archivo_foto.url
@@ -257,24 +1089,353 @@ class Evidencia(models.Model):
     @property
     def fotos_adicionales(self):
         fotos = []
-        f2 = self.get_foto_url_2
-        if f2:
-            fotos.append({'num': 2, 'url': f2})
-        f3 = self.get_foto_url_3
-        if f3:
-            fotos.append({'num': 3, 'url': f3})
+        if self.get_foto_url_2:
+            fotos.append({'num': 2, 'url': self.get_foto_url_2})
+        if self.get_foto_url_3:
+            fotos.append({'num': 3, 'url': self.get_foto_url_3})
         return fotos
 
+    @property
+    def fechaEvidencia(self):
+        return self.fecha_evidencia
+
+    @property
+    def estadoValidacion(self):
+        return "VALIDADA" if self.estado else ("RECHAZADA" if self.observacion else "EN_REVISION")
+
+    def cargar_archivo(self, archivo_subido, metadatos_dict=None):
+        self.archivo = archivo_subido
+        if hasattr(archivo_subido, 'read'):
+            self.archivo_foto = archivo_subido
+        elif isinstance(archivo_subido, str):
+            self.url_foto_simulada = archivo_subido
+        if metadatos_dict:
+            self.metadatos = metadatos_dict
+        self.fecha_evidencia = date.today()
+        self.save()
+
+    cargarArchivo = cargar_archivo
+
+    def solicitar_validacion(self):
+        self.estado = self.Estado.PENDIENTE
+        self.observacion_rechazo = None
+        self.save()
+
+    solicitarValidacion = solicitar_validacion
+
+    def validar_evidencia(self, aprobada: bool = True, motivo_rechazo=""):
+        self.estado = self.Estado.APROBADA if aprobada else self.Estado.RECHAZADA
+        if not aprobada:
+            self.observacion_rechazo = motivo_rechazo
+            self.observacion = motivo_rechazo
+        else:
+            self.observacion_rechazo = None
+        self.fecha_validacion = timezone.now()
+        self.save()
+
+    def validarEvidencia(self, observacion: str = ""):
+        self.validar_evidencia(aprobada=True, motivo_rechazo=observacion)
+
+    def rechazarEvidencia(self, observacion: str):
+        self.validar_evidencia(aprobada=False, motivo_rechazo=observacion)
+
     def save(self, *args, **kwargs):
+        if isinstance(self.estado, bool):
+            self.estado = self.Estado.APROBADA if self.estado else (self.Estado.RECHAZADA if self.observacion else self.Estado.PENDIENTE)
+
         if not self.codigo_verificador:
             prefijo = self.actividad.delegacion.codigo if self.actividad and self.actividad.delegacion else "SGR"
             self.codigo_verificador = generar_codigo_evidencia(prefijo)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Evidencia [{self.codigo_verificador}] - {self.estado}"
+        estado_str = "Aprobada" if self.estado else "Pendiente/Rechazada"
+        return f"Evidencia #{self.id} - Actividad #{self.actividad.id} ({estado_str})"
 
 
+# =============================================================================
+# 12. CLASE META / METAMODEL
+# =============================================================================
+class MetaModel(models.Model):
+    """
+    Entidad de Meta en el modelo de dominio UML (Clase Meta).
+    """
+    TIPO_CHOICES = [
+        ('CUANTITATIVO', 'Cuantitativo'),
+        ('PORCENTUAL', 'Porcentual'),
+    ]
+
+    nombre = models.CharField(max_length=150, verbose_name='Nombre de la Meta')
+    tipo_meta = models.CharField(max_length=20, choices=TIPO_CHOICES, default='CUANTITATIVO')
+    valor_meta = models.FloatField(default=1.0, verbose_name='Valor Objetivo / Meta')
+    unidad = models.CharField(max_length=50, default='Atenciones', verbose_name='Unidad de Medida')
+    ponderador = models.FloatField(default=25.0, verbose_name='Ponderación (%)')
+    vigencia = models.BooleanField(default=True, verbose_name='Vigencia')
+    periodo = models.ForeignKey(PeriodoMedicion, on_delete=models.CASCADE, related_name='metas', verbose_name='Período')
+    item = models.ForeignKey(ItemMedicion, on_delete=models.CASCADE, related_name='metas_rel', null=True, blank=True)
+    funcionario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='metas', null=True, blank=True)
+    delegacion = models.ForeignKey(Delegacion, on_delete=models.CASCADE, related_name='metas', null=True, blank=True)
+    trimestre = models.PositiveSmallIntegerField(default=3)
+    anio = models.PositiveIntegerField(default=2026)
+
+    class Meta:
+        db_table = 'Metas'
+        verbose_name = 'Meta'
+        verbose_name_plural = 'Metas'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.periodo})"
+
+    @property
+    def valorMeta(self):
+        return self.valor_meta
+
+    @valorMeta.setter
+    def valorMeta(self, val):
+        self.valor_meta = val
+
+    @property
+    def tipoMeta(self):
+        return self.tipo_meta
+
+    @property
+    def meta_esperada_al_dia(self) -> float:
+        """RF-026 / RN-007: Calcula el objetivo esperado según días transcurridos."""
+        porcentaje_esperado = self.periodo.calcular_meta_esperada_al_dia()
+        return round((self.valor_meta * porcentaje_esperado) / 100.0, 2)
+
+    metaEsperadaAlDia = meta_esperada_al_dia
+
+    @property
+    def cumplimiento_ponderado(self) -> float:
+        """RN-005: Multiplica el % de cumplimiento por el ponderador de la meta."""
+        porcentaje_cumplimiento = self.calcular_meta()
+        factor = self.ponderador / 100.0 if self.ponderador > 1.0 else self.ponderador
+        return round(porcentaje_cumplimiento * factor, 2)
+
+    cumplimientoPonderado = cumplimiento_ponderado
+
+    def calcular_meta(self) -> float:
+        """Calcula el acumulado de avances a través de los indicadores asociados o actividades."""
+        if self.valor_meta <= 0:
+            return 0.0
+        if hasattr(self, 'indicadores') and self.indicadores.exists():
+            total_avanzado = sum(ind.avance for ind in self.indicadores.all())
+        elif self.funcionario:
+            total_avanzado = Actividad.objects.filter(
+                funcionario=self.funcionario,
+                evidencias__estado=True
+            ).count()
+        else:
+            total_avanzado = 0.0
+        return round((total_avanzado / self.valor_meta) * 100.0, 2)
+
+    calcularMeta = calcular_meta
+
+    def validar_ponderacion(self) -> bool:
+        """RN-001: Valida que las metas del período no excedan el 100%."""
+        metas_periodo = MetaModel.objects.filter(periodo=self.periodo, vigencia=True)
+        if self.pk:
+            metas_periodo = metas_periodo.exclude(pk=self.pk)
+        suma_ponderadores = sum(m.ponderador for m in metas_periodo) + self.ponderador
+        return suma_ponderadores <= 100.0
+
+    validarPonderacion = validar_ponderacion
+
+    def obtenerEstadoSemaforo(self) -> str:
+        avance = self.calcular_meta()
+        if avance >= 80.0:
+            return "VERDE"
+        elif avance >= 50.0:
+            return "AMARILLO"
+        return "ROJO"
+
+    def calcularDesvio(self) -> float:
+        if hasattr(self, 'indicadores') and self.indicadores.exists():
+            total_avanzado = sum(ind.avance for ind in self.indicadores.all())
+        else:
+            total_avanzado = 0.0
+        return round(total_avanzado - self.meta_esperada_al_dia, 2)
+
+    def clean(self):
+        if self.valor_meta is not None and self.valor_meta <= 0:
+            raise ValidationError("RN-002: El valor objetivo de la meta debe ser mayor que cero.")
+        if self.ponderador is not None and self.ponderador <= 0:
+            raise ValidationError("RN-001: El ponderador debe ser mayor que cero.")
+
+
+Meta = MetaModel
+
+
+# =============================================================================
+# 14. CLASE INDICADOR
+# =============================================================================
+class Indicador(models.Model):
+    """
+    Entidad Indicador del modelo de dominio UML (Clase Indicador).
+    """
+    avance = models.FloatField(default=0.0, verbose_name='Avance Registrado')
+    cumplimiento = models.FloatField(default=0.0, verbose_name='Porcentaje de Cumplimiento (%)')
+    ponderacion = models.FloatField(default=0.0, verbose_name='Ponderación (%)')
+    semaforo = models.CharField(max_length=20, default='ROJO', verbose_name='Estado Semáforo')
+    fecha_calculo = models.DateField(default=timezone.now, verbose_name='Fecha de Cálculo')
+    meta = models.ForeignKey(MetaModel, on_delete=models.CASCADE, null=True, blank=True, related_name='indicadores', verbose_name='Meta')
+    periodo = models.ForeignKey(PeriodoMedicion, on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        db_table = 'Indicadores'
+        verbose_name = 'Indicador'
+        verbose_name_plural = 'Indicadores'
+
+    def __str__(self):
+        return f"Indicador {self.id} - Ponderación: {self.ponderacion}% - Semáforo: {self.semaforo}"
+
+    @property
+    def fechaCalculo(self):
+        return self.fecha_calculo
+
+    def calcular_semaforo(self) -> str:
+        """RN-008: Evalúa el cumplimiento respecto al esperado y asigna el color."""
+        periodo = self.meta.periodo if self.meta else self.periodo
+        if not periodo:
+            self.semaforo = 'ROJO'
+            return self.semaforo
+        esperado = periodo.calcular_meta_esperada_al_dia()
+        if esperado == 0:
+            self.semaforo = 'ROJO'
+            return self.semaforo
+        porcentaje_relativo = (self.cumplimiento / esperado) * 100.0
+        if porcentaje_relativo >= periodo.umbral_verde:
+            self.semaforo = 'VERDE'
+        elif porcentaje_relativo >= periodo.umbral_ambar:
+            self.semaforo = 'AMBAR'
+        else:
+            self.semaforo = 'ROJO'
+        return self.semaforo
+
+    def calcularSemaforo(self) -> str:
+        res = self.calcular_semaforo()
+        return "AMARILLO" if res == "AMBAR" else res
+
+    def actualizarAvance(self, nuevoAvance: float) -> bool:
+        self.avance = nuevoAvance
+        if self.meta and self.meta.valor_meta > 0:
+            porcentaje = (self.avance / self.meta.valor_meta) * 100.0
+            self.cumplimiento = round(porcentaje, 2)
+        else:
+            self.cumplimiento = 0.0
+        self.calcular_semaforo()
+        self.fecha_calculo = timezone.now().date()
+        self.save(update_fields=['avance', 'cumplimiento', 'semaforo', 'fecha_calculo'])
+        return True
+
+    def clean(self):
+        if self.ponderacion is not None and self.ponderacion < 0:
+            raise ValidationError("La ponderación del indicador no puede ser negativa.")
+        if self.meta and self.meta.periodo and self.meta.periodo.cerrado:
+            raise ValidationError("RN-013: No se pueden alterar indicadores asociados a un período cerrado.")
+
+
+# =============================================================================
+# 15. CLASE AJUSTE INCENTIVO
+# =============================================================================
+class AjusteIncentivo(models.Model):
+    """
+    Entidad AjusteIncentivo del modelo de dominio UML (Clase AjusteIncentivo).
+    """
+    TIPO_CHOICES = [
+        ('INCENTIVO', 'Incentivo / Felicitación'),
+        ('PENALIZACION', 'Penalización / Reclamo'),
+        ('BONIFICACION', 'Bonificación'),
+        ('DESCUENTO', 'Descuento'),
+    ]
+
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='INCENTIVO', verbose_name='Tipo de Ajuste')
+    motivo = models.TextField(verbose_name='Motivo del Ajuste')
+    valor_porcentaje = models.FloatField(default=0.0, verbose_name='Porcentaje de Ajuste (%)')
+    fecha_registro = models.DateTimeField(default=timezone.now, verbose_name='Fecha de Registro')
+    funcionario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ajustes', verbose_name='Funcionario Evaluado')
+    periodo = models.ForeignKey(PeriodoMedicion, on_delete=models.CASCADE, null=True, blank=True, related_name='ajustes', verbose_name='Período Evaluativo')
+    estado = models.CharField(max_length=20, default='PENDIENTE')
+    aprobadoPor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='ajustes_aprobados')
+    fechaAprobacion = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'AjustesIncentivo'
+        verbose_name = 'Ajuste de Incentivo / Penalización'
+        verbose_name_plural = 'Ajustes de Incentivos / Penalizaciones'
+
+    def __str__(self):
+        return f"{self.tipo} ({self.valor_porcentaje}%) - Funcionario: {self.funcionario}"
+
+    @property
+    def valorPorcentaje(self):
+        return self.valor_porcentaje
+
+    @valorPorcentaje.setter
+    def valorPorcentaje(self, val):
+        self.valor_porcentaje = val
+
+    @property
+    def fechaRegistro(self):
+        return self.fecha_registro
+
+    def aplicar_ajuste(self, cumplimiento_base: float = None) -> float:
+        """RN-011 / RF-025: Calcula e impacta la variación porcentual."""
+        if self.periodo and self.periodo.cerrado:
+            raise ValidationError("RN-013: No se puede aplicar un ajuste sobre un período evaluativo que ya se encuentra cerrado.")
+        impacto = abs(self.valor_porcentaje)
+        if self.tipo in ['PENALIZACION', 'DESCUENTO']:
+            impacto = -impacto
+        if cumplimiento_base is not None:
+            if self.estado not in ["APROBADO", "APLICADO", "INCENTIVO", "PENALIZACION"]:
+                return round(cumplimiento_base, 2)
+            resultado = max(0.0, cumplimiento_base + impacto)
+            if self.periodo and hasattr(self.periodo, 'tope_cumplimiento'):
+                resultado = min(resultado, self.periodo.tope_cumplimiento)
+            return round(resultado, 2)
+        return impacto
+
+    aplicarAjuste = aplicar_ajuste
+
+    def aprobarAjuste(self, funcionarioAprobador) -> bool:
+        if self.estado != "PENDIENTE":
+            return False
+        if not funcionarioAprobador.puede_aprobar_ajustes():
+            raise PermissionError("El funcionario no cuenta con el rol o los permisos requeridos.")
+        if self.funcionario_id == funcionarioAprobador.id:
+            raise ValueError("Un funcionario no puede auto-aprobar su propio ajuste de incentivo.")
+        self.estado = "APROBADO"
+        self.aprobadoPor = funcionarioAprobador
+        self.fechaAprobacion = timezone.now()
+        self.save(update_fields=['estado', 'aprobadoPor', 'fechaAprobacion'])
+        return True
+
+    def rechazarAjuste(self, funcionarioAprobador, motivoRechazo: str = None) -> bool:
+        if self.estado != "PENDIENTE":
+            return False
+        if not funcionarioAprobador.puede_aprobar_ajustes():
+            raise PermissionError("El funcionario no cuenta con los permisos requeridos para rechazar ajustes.")
+        if self.funcionario_id == funcionarioAprobador.id:
+            raise ValueError("Un funcionario no puede rechazar o evaluar su propio ajuste de incentivo.")
+        self.estado = "RECHAZADO"
+        self.aprobadoPor = funcionarioAprobador
+        self.fechaAprobacion = timezone.now()
+        if motivoRechazo:
+            self.motivo += f"\n[RECHAZADO]: {motivoRechazo}"
+        self.save(update_fields=['estado', 'aprobadoPor', 'fechaAprobacion', 'motivo'])
+        return True
+
+    def clean(self):
+        if self.periodo and self.periodo.cerrado:
+            raise ValidationError("RN-013: No se pueden registrar o modificar ajustes dentro de un período cerrado.")
+        if self.valor_porcentaje is not None and self.valor_porcentaje <= 0:
+            raise ValidationError("El valor del porcentaje de ajuste debe ser un valor mayor a cero.")
+
+
+# =============================================================================
+# CASOS SOCIALES
+# =============================================================================
 class CasoSocial(models.Model):
     codigo_caso = models.CharField(max_length=30, unique=True)
     persona_anonimizada = models.CharField(max_length=150)
@@ -308,21 +1469,76 @@ class AtencionSocial(models.Model):
         return f"{self.caso.codigo_caso} - Etapa {self.etapa}"
 
 
+# =============================================================================
+# 6. CLASE AUDITORIA / REGISTROAUDITORIA
+# =============================================================================
 class RegistroAuditoria(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
-    accion = models.CharField(max_length=50)
-    entidad = models.CharField(max_length=50)
-    identificador_registro = models.CharField(max_length=50)
-    valor_anterior = models.JSONField(null=True, blank=True)
-    valor_nuevo = models.JSONField(null=True, blank=True)
-    ip_origen = models.GenericIPAddressField(null=True, blank=True)
+    """
+    Entidad del sistema encargada de registrar la trazabilidad histórica (Clase Auditoria).
+    """
+    EVENTO_CHOICES = [
+        ('CREACION', 'Creación de Registro'),
+        ('MODIFICACION', 'Modificación de Datos'),
+        ('ELIMINACION', 'Eliminación de Registro'),
+        ('LOGIN', 'Inicio de Sesión'),
+        ('APROBACION', 'Aprobación / Validación'),
+    ]
+
+    evento = models.CharField(max_length=50, default='CREACION', verbose_name="Tipo de Evento")
+    accion = models.CharField(max_length=50, default='CREACION')
+    fecha_auditoria = models.DateTimeField(default=timezone.now, blank=True, verbose_name="Fecha y Hora de Auditoría")
     fecha = models.DateTimeField(auto_now_add=True)
+    entidad = models.CharField(max_length=100, verbose_name="Entidad / Tabla Afectada")
+    identificador = models.CharField(max_length=50, default='0', verbose_name="Identificador del Registro (ID)")
+    identificador_registro = models.CharField(max_length=50, default='0')
+    valor_anterior = models.JSONField(blank=True, null=True, verbose_name="Valores Anteriores (JSON)")
+    valor_nuevo = models.JSONField(blank=True, null=True, verbose_name="Valores Nuevos (JSON)")
+    funcionario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='auditorias', verbose_name="Funcionario Responsable")
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='auditorias_legacy')
+    ip_origen = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:
-        verbose_name = "Registro de Auditoría"
-        verbose_name_plural = "Registros de Auditoría"
-        ordering = ['-fecha']
+        db_table = 'Auditorias'
+        verbose_name = 'Auditoría'
+        verbose_name_plural = 'Auditorías'
+        ordering = ['-fecha_auditoria']
 
     def __str__(self):
-        usr = self.usuario.username if self.usuario else "Sistema"
-        return f"[{self.fecha.strftime('%Y-%m-%d %H:%M')}] {usr} -> {self.accion} {self.entidad} #{self.identificador_registro}"
+        func_nom = self.funcionario.get_full_name() if self.funcionario else (self.usuario.username if self.usuario else "Sistema")
+        return f"Auditoría #{self.id} - {self.evento} en {self.entidad} por {func_nom}"
+
+    @classmethod
+    def registrar_auditoria(cls, funcionario_obj, evento, entidad, identificador, valor_anterior=None, valor_nuevo=None):
+        return cls.objects.create(
+            funcionario=funcionario_obj if isinstance(funcionario_obj, Usuario) else None,
+            usuario=funcionario_obj if isinstance(funcionario_obj, Usuario) else None,
+            evento=evento,
+            accion=evento,
+            entidad=entidad,
+            identificador=str(identificador),
+            identificador_registro=str(identificador),
+            valor_anterior=valor_anterior,
+            valor_nuevo=valor_nuevo
+        )
+
+    @classmethod
+    def registrarAuditoria(cls, evento: str, entidad: str, identificador: str, valor_anterior: dict = None, valor_nuevo: dict = None, funcionario=None):
+        return cls.registrar_auditoria(funcionario, evento, entidad, identificador, valor_anterior, valor_nuevo)
+
+    @classmethod
+    def consultarHistorial(cls, entidad: str, identificador: str):
+        return cls.objects.filter(
+            entidad__iexact=entidad,
+            identificador=str(identificador)
+        ).order_by('-fecha_auditoria')
+
+
+# =============================================================================
+# ALIASES OFICIALES PARA EQUIVALENCIA TOTAL 1:1 CON LOS MODELOS DE SOLEDAD
+# =============================================================================
+Funcionario = Usuario
+Compromiso = CompromisoAgenda
+Periodo = PeriodoMedicion
+Item = ItemMedicion
+MetaModel = Meta
+Auditoria = RegistroAuditoria
