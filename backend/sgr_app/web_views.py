@@ -86,6 +86,10 @@ def web_logout(request):
     return redirect('web_login')
 
 def web_dashboard(request):
+    if request.user.is_authenticated and request.user.rol == Usuario.Rol.FUNCIONARIO:
+        messages.info(request, "Acceso redirigido: Como Funcionario de Terreno tienes asignado tu Dashboard Personal de cumplimiento individual.")
+        return redirect('web_personal')
+
     periodo = PeriodoMedicion.objects.filter(cerrado=False).first() or PeriodoMedicion.objects.first()
     delegaciones = Delegacion.objects.filter(activo=True)
     
