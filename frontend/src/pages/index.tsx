@@ -1,12 +1,12 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Shield, KeyRound, User, Lock, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('coordinador');
-  const [password, setPassword] = useState('CoordSGR2026!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,13 +14,6 @@ export default function LoginPage() {
   const [show2FA, setShow2FA] = useState(false);
   const [userId2FA, setUserId2FA] = useState<number | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
-
-  const quickLogins = [
-    { label: 'Coordinador Comunal', user: 'coordinador', pass: 'CoordSGR2026!', badge: 'Visión Transversal' },
-    { label: 'Delegado Las Compañías (P. Cuadra)', user: 'pablo.cuadra', pass: 'Delegado2026!', badge: 'Delegación CIA' },
-    { label: 'Delegada La Antena (E. Villanueva)', user: 'elizabeth.villanueva', pass: 'Delegado2026!', badge: 'Delegación ANT' },
-    { label: 'Funcionario Terreno (C. Tapia)', user: 'carlos.terreno.cia', pass: 'Terreno2026!', badge: 'Terreno CIA' },
-  ];
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,8 +67,8 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Cabecera Institucional */}
         <div className="bg-gradient-to-r from-red-700 to-red-600 p-6 text-white text-center relative">
-          <div className="inline-flex p-3 bg-white/10 backdrop-blur rounded-2xl mb-3 shadow-inner">
-            <Shield size={36} className="text-amber-300" />
+          <div className="inline-flex p-2 bg-white rounded-2xl mb-3 shadow-md w-20 h-20 items-center justify-center overflow-hidden">
+            <img src="/logo_la_serena.png" alt="Logo Municipalidad de La Serena" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xl font-black uppercase tracking-tight">Municipalidad de La Serena</h1>
           <p className="text-xs font-semibold text-red-100 mt-1 uppercase tracking-widest">
@@ -175,29 +168,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Accesos Rápidos de Prueba para Evaluación */}
-          <div className="mt-6 pt-5 border-t border-slate-800">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center mb-2.5">
-              Cuentas de Demostración & Evaluación Docente
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {quickLogins.map((acc) => (
-                <button
-                  key={acc.user}
-                  type="button"
-                  onClick={() => {
-                    setUsername(acc.user);
-                    setPassword(acc.pass);
-                    setShow2FA(false);
-                  }}
-                  className="text-left p-2 rounded-lg bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-xs transition-colors"
-                >
-                  <div className="font-semibold text-slate-200 truncate">{acc.label}</div>
-                  <div className="text-[10px] text-amber-400 font-mono">{acc.badge}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

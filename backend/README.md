@@ -76,16 +76,18 @@ El servidor estará escuchando en `http://127.0.0.1:8000/`.
 
 ## 3. Cuentas de Usuario de Prueba Precargadas
 
-Al ejecutar `python manage.py poblar_sgr`, se inicializan las 6 delegaciones y los siguientes usuarios de demostración (código 2FA de prueba: `123456`):
+Al ejecutar `python manage.py poblar_sgr`, se inicializan las 6 delegaciones y los usuarios institucionales con perfiles RBAC para pruebas:
 
-| Usuario | Contraseña | Rol | Asignación / Territorio |
-| :--- | :--- | :--- | :--- |
-| `pablo.cuadra` | `Password123!` | `DELEGADO` | Delegado Municipal (Las Compañías) - Validador de Evidencias |
-| `carlos.tapia` | `Password123!` | `FUNCIONARIO` | Gestor Territorial (Las Compañías) - Formulario Móvil |
-| `coordinador` | `Password123!` | `COORDINADOR` | Coordinador Comunal de Delegaciones |
-| `admin` | `Password123!` | `ADMIN` | Administrador Comunal (Acceso total) |
-| `elizabeth.villanueva` | `Password123!` | `DELEGADO` | Delegada Municipal (La Antena) |
-| `alan.von` | `Password123!` | `DELEGADO` | Delegado Municipal (Centro) |
+| Usuario | Rol | Asignación / Territorio |
+| :--- | :--- | :--- |
+| `pablo.cuadra` | `DELEGADO` | Delegado Municipal (Las Compañías) - Validador de Evidencias |
+| `carlos.tapia` | `FUNCIONARIO` | Gestor Territorial (Las Compañías) - Formulario Móvil |
+| `coordinador` | `COORDINADOR` | Coordinador Comunal de Delegaciones |
+| `admin` | `ADMIN` | Administrador Comunal (Acceso total) |
+| `elizabeth.villanueva` | `DELEGADO` | Delegada Municipal (La Antena) |
+| `alan.von` | `DELEGADO` | Delegado Municipal (Centro) |
+
+> **Nota de Seguridad:** Por buenas prácticas de desarrollo seguro, las contraseñas no se exponen en texto plano en la documentación del repositorio. Para pruebas locales del entorno de desarrollo, el seeder `poblar_sgr` configura las credenciales de prueba predeterminadas (código 2FA temporal de prueba: `123456`).
 
 ---
 
