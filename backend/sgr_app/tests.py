@@ -434,3 +434,21 @@ class MatrizSGRTestSuite(TestCase):
         resp = c.post('/login/', {'username': "' OR '1'='1", 'password': "' OR '1'='1"})
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Credenciales inválidas')
+
+    # 21. Configuración y Conectividad Cloud AWS (Amazon S3 & Amazon RDS)
+    def test_integracion_cloud_aws(self):
+        """Verifica la arquitectura Cloud AWS especificada en Documentacion.pdf págs 80-84."""
+        from sgr_app.services.aws_service import test_s3_connection, test_rds_connection, is_s3_enabled
+        from django.conf import settings
+
+        # 1. Diagnóstico de base de datos relacional (RDS/MySQL o fallback SQLite)
+        res_rds = test_rds_connection()
+        self.assertIn(res_rds['status'], ['connected', 'local_sqlite'])
+
+        # 2. Diagnóstico de almacenamiento S3 (fallback local seguro si USE_S3=False)
+        res_s3 = test_s3_connection()
+        self.assertIn(res_s3['status'], ['connected', 'disabled'])
+
+        # 3. Verificación de variables y settings de AWS
+        self.assertTrue(hasattr(settings, 'USE_S3'))
+        self.assertTrue(hasattr(settings, 'USE_MYSQL'))

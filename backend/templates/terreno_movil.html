@@ -2,6 +2,10 @@
 {% block title %}Evidencias de Terreno | Matriz SGR{% endblock %}
 
 {% block content %}
+<!-- Dependencias de Mapas Leaflet (OpenStreetMap) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <div class="row justify-content-center">
   <div class="col-12 col-md-9 col-lg-7">
     <div class="d-flex flex-column gap-3">
@@ -55,13 +59,13 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 2: DIRECCIÓN Y DETALLE DE LA INTERVENCIÓN -->
+        <!-- SECCIÓN 2: DIRECCIÓN, GEOLOCALIZACIÓN Y DETALLE -->
         <div class="card p-3 shadow-sm border bg-white">
           <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
             <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 28px; height: 28px; background-color: var(--carmesi-la-serena); font-size: 0.85rem;">2</div>
             <div>
               <h6 class="fw-bold text-dark mb-0">Ubicación y Detalle de la Actividad</h6>
-              <small class="text-secondary">Ubicación física y descripción del trabajo realizado</small>
+              <small class="text-secondary">Ubicación física, geolocalización in situ y descripción del trabajo</small>
             </div>
           </div>
 
@@ -70,8 +74,33 @@
               <label for="inp-direccion" class="form-label fw-bold text-dark small mb-1">
                 <i class="bi bi-geo-alt-fill text-danger me-1"></i> Dirección (Calle, Número o Sector) <span class="text-danger">*</span>
               </label>
-              <input type="text" id="inp-direccion" name="direccion" class="form-control" placeholder="Ej: Balmaceda 1234, La Serena / Sector El Milagro" required>
-              <div class="form-text small text-secondary">Indique la calle, número, intersección o cuadrante donde se realizó el operativo.</div>
+              <div class="input-group">
+                <input type="text" id="inp-direccion" name="direccion" class="form-control" placeholder="Ej: Balmaceda 1234, La Serena / Sector El Milagro" required onkeydown="if(event.key==='Enter'){event.preventDefault(); buscarDireccionEnMapa();}">
+                <button type="button" id="btn-buscar-calle" class="btn btn-outline-secondary fw-semibold btn-sm d-flex align-items-center gap-1" onclick="buscarDireccionEnMapa()" title="Localizar dirección en el mapa">
+                  <i class="bi bi-search"></i> Buscar
+                </button>
+                <button type="button" class="btn btn-outline-danger fw-semibold btn-sm d-flex align-items-center gap-1" onclick="obtenerUbicacionGPS()" title="Detectar posición actual mediante GPS">
+                  <i class="bi bi-crosshair"></i> Mi GPS
+                </button>
+              </div>
+              <div id="geocode-feedback" class="small mt-1 d-none"></div>
+              <div class="form-text small text-secondary">Indique la calle, número o sector; el mapa se centrará y posicionará el marcador automáticamente.</div>
+            </div>
+
+            <!-- Mapa Interactivo Leaflet -->
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold text-dark small mb-0">
+                  <i class="bi bi-map-fill text-danger me-1"></i> Punto de Intervención (La Serena)
+                </label>
+                <span id="gps-coords-badge" class="badge bg-secondary font-monospace" style="font-size: 0.72rem;">
+                  Lat: -29.9027, Lng: -71.2519
+                </span>
+              </div>
+              <div id="map-terreno" style="height: 220px; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
+              <small class="text-secondary d-block mt-1" style="font-size: 0.72rem;">
+                <i class="bi bi-info-circle me-1"></i>Haz clic en el mapa o arrastra el marcador para fijar las coordenadas exactas de la evidencia.
+              </small>
             </div>
 
             <div class="col-12">
@@ -89,7 +118,7 @@
             <div class="d-flex align-items-center gap-2">
               <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 28px; height: 28px; background-color: var(--carmesi-la-serena); font-size: 0.85rem;">3</div>
               <div>
-                <h6 class="fw-bold text-dark mb-0">Evidencias</h6>
+                <h6 class="fw-bold text-dark mb-0">Evidencias Fotográficas</h6>
                 <small class="text-secondary">Adjunte las fotografías que respaldan el cumplimiento</small>
               </div>
             </div>
@@ -203,6 +232,113 @@
     3: ''
   };
 
+  // Coordenadas iniciales (Plaza de Armas La Serena)
+  let map, marker;
+  let currentLat = -29.9027;
+  let currentLng = -71.2519;
+
+  function initMap() {
+    if (typeof L === 'undefined') return;
+    map = L.map('map-terreno').setView([currentLat, currentLng], 14);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri &mdash; Fuentes: Esri, DeLorme, NAVTEQ, USGS, METI'
+    }).addTo(map);
+
+    marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
+
+    marker.on('dragend', function() {
+      const pos = marker.getLatLng();
+      updateCoords(pos.lat, pos.lng);
+    });
+
+    map.on('click', function(e) {
+      marker.setLatLng(e.latlng);
+      updateCoords(e.latlng.lat, e.latlng.lng);
+    });
+  }
+
+  let geocodeTimeout = null;
+  function buscarDireccionEnMapa() {
+    const input = document.getElementById('inp-direccion');
+    const feedback = document.getElementById('geocode-feedback');
+    const btn = document.getElementById('btn-buscar-calle');
+    const query = (input ? input.value : '').trim();
+    if (!query || query.length < 3) return;
+
+    if (feedback) {
+      feedback.className = 'small mt-1 text-muted d-block';
+      feedback.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-danger"></span> Localizando dirección en el mapa...';
+    }
+    if (btn) btn.disabled = true;
+
+    fetch(`/api/geocodificar/?q=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (btn) btn.disabled = false;
+        if (data.encontrado && data.lat && data.lng) {
+          updateCoords(data.lat, data.lng);
+          if (map && marker) {
+            marker.setLatLng([data.lat, data.lng]);
+            map.setView([data.lat, data.lng], 16);
+            marker.bindPopup(`<b>${query}</b><br><small class="text-secondary">${data.direccion_encontrada}</small>`).openPopup();
+          }
+          if (feedback) {
+            feedback.className = 'small mt-1 text-success fw-semibold d-block';
+            feedback.innerHTML = `<i class="bi bi-check2-circle me-1"></i> Punto localizado en el mapa: Lat ${data.lat.toFixed(4)}, Lng ${data.lng.toFixed(4)}`;
+          }
+        } else {
+          if (feedback) {
+            feedback.className = 'small mt-1 text-warning-emphasis d-block';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i> No se encontró el número exacto. Puedes hacer clic en el mapa para ajustar el marcador.';
+          }
+        }
+      })
+      .catch(err => {
+        if (btn) btn.disabled = false;
+        if (feedback) {
+          feedback.className = 'small mt-1 text-secondary d-block';
+          feedback.innerHTML = '<i class="bi bi-geo-alt me-1"></i> Puedes hacer clic en el mapa para fijar las coordenadas exactas.';
+        }
+      });
+  }
+
+  function updateCoords(lat, lng) {
+    currentLat = lat;
+    currentLng = lng;
+    const badge = document.getElementById('gps-coords-badge');
+    if (badge) {
+      badge.innerText = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+    }
+  }
+
+  function obtenerUbicacionGPS() {
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización GPS.');
+      return;
+    }
+    const badge = document.getElementById('gps-coords-badge');
+    if (badge) badge.innerText = 'Obteniendo GPS...';
+
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        updateCoords(lat, lng);
+        if (map && marker) {
+          map.setView([lat, lng], 16);
+          marker.setLatLng([lat, lng]);
+          marker.bindPopup('<b>Tu ubicación GPS actual</b>').openPopup();
+        }
+      },
+      function() {
+        alert('No se pudo acceder al sensor GPS. Puedes hacer clic en el mapa para posicionar el marcador.');
+        if (badge) badge.innerText = `Lat: ${currentLat.toFixed(4)}, Lng: ${currentLng.toFixed(4)}`;
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
+
   function previewEvidencia(input, slotNum) {
     if (input.files && input.files[0]) {
       const reader = new FileReader();
@@ -234,11 +370,27 @@
     }
   }
 
-  // Marcar seleccionado inicial
+  // Inicialización y eventos de geocodificación
   document.addEventListener('DOMContentLoaded', () => {
     const checkedRadio = document.querySelector('input[name="item_medicion"]:checked');
     if (checkedRadio) {
       seleccionarItem(checkedRadio);
+    }
+    setTimeout(initMap, 200);
+
+    const inpDir = document.getElementById('inp-direccion');
+    if (inpDir) {
+      inpDir.addEventListener('blur', function() {
+        if (this.value.trim().length >= 4) {
+          buscarDireccionEnMapa();
+        }
+      });
+      inpDir.addEventListener('input', function() {
+        clearTimeout(geocodeTimeout);
+        if (this.value.trim().length >= 6) {
+          geocodeTimeout = setTimeout(buscarDireccionEnMapa, 1000);
+        }
+      });
     }
   });
 
@@ -267,11 +419,11 @@
       funcionario: {{ request.user.id|default:1 }},
       delegacion: {{ request.user.delegacion.id|default:4 }},
       item_medicion: itemId,
-      direccion: direccion,
+      direccion: direccion + ` (GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)})`,
       actividad_solicitud: 'Inspección operativa: ' + direccion,
       accion_ejecutada: accionEjecutada,
-      contacto_nombre: 'Vecino Anonimizado (Terreno)',
-      contacto_telefono: '+56900000000',
+      contacto_nombre: 'Vecino / Organización Territorial (' + direccion + ')',
+      contacto_telefono: null,
       url_foto_simulada: fotosBase64[1] || 'https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80',
       url_foto_simulada_2: fotosBase64[2] || '',
       url_foto_simulada_3: fotosBase64[3] || ''
@@ -281,7 +433,7 @@
       if (typeof guardarRegistroOffline === 'function') {
         guardarRegistroOffline(payload);
       }
-      alert('¡Sin conexión a internet! Tu registro se ha guardado localmente en tu teléfono y se enviará automáticamente al recuperar señal.');
+      alert('Sin conexión a internet. Su registro se ha guardado localmente y se enviará automáticamente al recuperar señal.');
       window.location.href = "{% url 'web_personal' %}";
       return;
     }
@@ -299,7 +451,7 @@
       const data = await res.json();
       if (res.ok) {
         const codigo = (data.evidencia ? data.evidencia.codigo_verificador : 'SGR-OK');
-        alert('¡Excelente! Evidencias registradas con éxito.\nCódigo Único de Evidencia: ' + codigo);
+        alert('Evidencias registradas exitosamente.\nCódigo Verificador: ' + codigo);
         window.location.href = "{% url 'web_personal' %}";
       } else {
         alert('Respuesta del servidor: ' + (data.error || JSON.stringify(data)));
@@ -310,7 +462,7 @@
       if (typeof guardarRegistroOffline === 'function') {
         guardarRegistroOffline(payload);
       }
-      alert('No se pudo conectar con el servidor municipal. Se ha guardado en tu dispositivo para sincronizarse en cuanto vuelva la señal.');
+      alert('No se pudo conectar con el servidor municipal. Se ha guardado en su dispositivo para sincronizarse en cuanto vuelva la señal.');
       window.location.href = "{% url 'web_personal' %}";
     }
   }

@@ -35,6 +35,31 @@
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       letter-spacing: -0.01em;
       -webkit-font-smoothing: antialiased;
+      scroll-padding-top: 85px;
+    }
+    /* Scroll margin solo para anclas y tabs, excluyendo modales para evitar bucles de foco y parpadeo */
+    .tab-pane, [id^="compromiso-"], [id^="sec-"] {
+      scroll-margin-top: 85px;
+    }
+    .modal, .modal * {
+      scroll-margin-top: 0 !important;
+      scroll-padding-top: 0 !important;
+    }
+
+    /* Scrollbar visible y estilizado para tablas horizontales */
+    .table-responsive::-webkit-scrollbar {
+      height: 9px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+      background: #F1F5F9;
+      border-radius: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+      background: var(--carmesi-la-serena);
     }
 
     /* Animación fluida de entrada */
@@ -222,9 +247,10 @@
       <span class="text-white-50 d-none d-sm-inline">|</span>
       <span class="d-none d-sm-inline fw-semibold">Sistema de Gestión de Resultados (Matriz SGR)</span>
       <span class="text-white-50 d-none d-md-inline">|</span>
-      <span class="fw-bold d-none d-md-inline" style="color: #FDE68A;"><i class="bi bi-calendar3 me-1"></i> Trimestre 3 - 2026</span>
+      <span class="fw-bold d-none d-md-inline" style="color: #FDE68A;"><i class="bi bi-calendar3 me-1"></i> {{ nombre_periodo_activo|default:"Cuarto Trimestre - 2026" }}</span>
     </div>
 
+    {% if request.resolver_match.url_name != 'web_login' %}
     <div class="d-flex align-items-center gap-3">
       <!-- Indicador Online / Offline -->
       <span id="conn-badge" class="badge bg-success-subtle text-success border border-success">
@@ -251,8 +277,10 @@
         <a href="{% url 'web_login' %}" class="btn btn-sm btn-light py-0 px-3 fw-bold text-danger">Iniciar Sesión</a>
       {% endif %}
     </div>
+    {% endif %}
   </header>
 
+  {% if request.user.is_authenticated and request.resolver_match.url_name != 'web_login' %}
   <!-- Navbar Principal Blanco con Acento Carmesí -->
   <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm py-2" style="border-bottom: 2px solid var(--carmesi-la-serena) !important;">
     <div class="container-fluid px-3 px-lg-4">
@@ -280,20 +308,27 @@
           </li>
           {% endif %}
           <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'web_semaforo' %}active{% endif %}" href="{% url 'web_semaforo' %}">
+              <i class="bi bi-traffic-light me-1"></i> Semáforo al Día
+            </a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'web_personal' %}active{% endif %}" href="{% url 'web_personal' %}">
               <i class="bi bi-person-check me-1"></i> Dashboard Personal
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'web_tubo' %}active{% endif %}" href="{% url 'web_tubo' %}">
-              <i class="bi bi-kanban me-1"></i> Tubo de Trabajo
+              <i class="bi bi-kanban me-1"></i> Tubo de Trabajo (Agenda Colectiva)
             </a>
           </li>
+          {% if request.user.is_authenticated and request.user.rol in 'ADMIN,COORDINADOR,DELEGADO' %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'web_verificacion' %}active{% endif %}" href="{% url 'web_verificacion' %}">
               <i class="bi bi-check2-circle me-1"></i> Validación "Check"
             </a>
           </li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'web_terreno' %}active{% endif %}" href="{% url 'web_terreno' %}">
               <i class="bi bi-camera-fill me-1"></i> Evidencias de Terreno
@@ -315,6 +350,7 @@
       </div>
     </div>
   </nav>
+  {% endif %}
 
   <!-- Contenido Principal -->
   <main class="flex-grow-1 py-4">
@@ -332,14 +368,59 @@
     </div>
   </main>
 
-  <!-- Footer Institucional -->
-  <footer class="bg-white py-3 border-top text-secondary small mt-auto" style="border-top: 2px solid #E2E8F0 !important;">
-    <div class="container-fluid px-3 px-lg-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-      <div>
-        <strong style="color: var(--carmesi-la-serena);">Ilustre Municipalidad de La Serena</strong> &bull; Sistema SGR Territorial v1.0
+  <!-- Footer Institucional Oficial Municipalidad de La Serena -->
+  <footer class="text-white py-4 mt-auto shadow-lg" style="background-color: #121316; border-top: 3px solid var(--carmesi-la-serena);">
+    <div class="container-fluid px-4 px-lg-5">
+      <div class="row g-4 align-items-center">
+        <!-- Columna 1: Escudo y Nombre Municipal -->
+        <div class="col-12 col-md-4 text-center text-md-start">
+          <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-2">
+            <div class="bg-white p-1 rounded-2 shadow-sm" style="width: 52px; height: 52px; display: inline-flex; align-items: center; justify-content: center;">
+              <img src="/static/img/logo_la_serena.png" alt="Escudo La Serena" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div>
+              <div class="fw-black text-uppercase tracking-wider" style="font-size: 1.05rem; letter-spacing: 0.5px;">LA SERENA</div>
+              <small class="text-white-50 text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 1px;">Ilustre Municipalidad</small>
+            </div>
+          </div>
+          <div class="d-flex gap-2 justify-content-center justify-content-md-start mt-3">
+            <a href="https://maps.google.com/?q=Municipalidad+de+La+Serena" target="_blank" class="btn btn-sm btn-outline-light px-3 py-1 rounded-2" style="font-size: 0.78rem;">
+              <i class="bi bi-geo-alt-fill me-1 text-danger"></i> Cómo llegar
+            </a>
+            <a href="mailto:oficinadepartes@laserena.cl" class="btn btn-sm btn-outline-light px-3 py-1 rounded-2" style="font-size: 0.78rem;">
+              <i class="bi bi-envelope-fill me-1 text-warning"></i> Escríbenos
+            </a>
+          </div>
+        </div>
+
+        <!-- Columna 2: Transparencia y Participación -->
+        <div class="col-12 col-md-4 text-center text-md-start">
+          <h6 class="text-uppercase fw-bold text-white-50 small mb-2" style="letter-spacing: 1px;">Transparencia y Participación</h6>
+          <ul class="list-unstyled mb-0 small" style="font-size: 0.82rem; line-height: 1.8;">
+            <li><i class="bi bi-shield-check text-success me-2"></i>Transparencia Activa</li>
+            <li><i class="bi bi-file-earmark-text text-light me-2"></i>Solicitar Información</li>
+            <li><i class="bi bi-people text-warning me-2"></i>Plataforma Ley del Lobby</li>
+            <li><i class="bi bi-lock text-danger me-2"></i>Políticas de Privacidad y Protección de Datos</li>
+          </ul>
+        </div>
+
+        <!-- Columna 3: Contacto y Horarios -->
+        <div class="col-12 col-md-4 text-center text-md-start">
+          <h6 class="text-uppercase fw-bold text-white-50 small mb-2" style="letter-spacing: 1px;">Contacto Institucional</h6>
+          <div class="small text-white-50" style="font-size: 0.8rem; line-height: 1.7;">
+            <div><i class="bi bi-geo-alt me-2 text-white"></i>Arturo Prat 451, La Serena, Coquimbo</div>
+            <div><i class="bi bi-telephone me-2 text-white"></i>(56) 51 2 206601 | 2 206620</div>
+            <div><i class="bi bi-envelope me-2 text-white"></i>oficinadepartes@laserena.cl</div>
+            <div><i class="bi bi-clock me-2 text-white"></i>Lun a Jue: 08:30 - 14:00, 15:00 - 17:30 | Vie: 08:30 - 14:00</div>
+          </div>
+        </div>
       </div>
-      <div>
-        Desarrollado en Python/Django, SQLite y Bootstrap 5 &bull; Identidad Institucional Oficial
+
+      <hr class="my-3 border-secondary" style="opacity: 0.25;">
+      
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center text-white-50 small" style="font-size: 0.76rem;">
+        <div>&copy; 2026 Ilustre Municipalidad de La Serena. Todos los derechos reservados.</div>
+        <div>Plataforma Institucional de Gestión de Resultados (Matriz SGR)</div>
       </div>
     </div>
   </footer>

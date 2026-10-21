@@ -49,73 +49,48 @@ class Command(BaseCommand):
             c, _ = Cargo.objects.get_or_create(nombre=nombre, defaults={"descripcion": desc})
             cargos[nombre] = c
 
-        # 3. Usuarios Institucionales
-        # Administrador y Coordinador
+        # 3. Cuentas Oficiales de Demostración del README
         admin_u, _ = Usuario.objects.get_or_create(
             username="admin",
             defaults={"first_name": "Admin", "last_name": "Sistema", "email": "admin.sgr@laserena.cl", "rol": Usuario.Rol.ADMIN, "is_staff": True, "is_superuser": True}
         )
-        admin_u.set_password("Password123!")
+        admin_u.set_password("AdminSGR2026!")
         admin_u.save()
 
         coord_u, _ = Usuario.objects.get_or_create(
             username="coordinador",
             defaults={"first_name": "Coordinador", "last_name": "Comunal", "email": "coordinacion@laserena.cl", "rol": Usuario.Rol.COORDINADOR, "cargo": cargos["Coordinador Comunal"]}
         )
-        coord_u.set_password("Password123!")
+        coord_u.set_password("CoordSGR2026!")
         coord_u.save()
 
-        # Delegados reales según documento
-        delegados_data = [
-            ("pablo.cuadra", "Pablo", "Cuadra Corrales", "lascompanias@laserena.cl", "CIA"),
-            ("elizabeth.villanueva", "Elizabeth", "Villanueva Oyarce", "antena@laserena.cl", "ANT"),
-            ("rodrigo.fuenzalida", "Rodrigo", "Fuenzalida Vásquez", "avenidadelmar@laserena.cl", "ADM"),
-            ("alan.von", "Alan", "Von Kretschmann", "centro@laserena.cl", "CEN"),
-            ("manuel.barraza", "Manuel", "Barraza Delgado", "rural@laserena.cl", "RUR"),
-            ("soledad.rojas", "María Soledad", "Rojas", "pampa@laserena.cl", "PAM"),
-        ]
-        delegados_dict = {}
-        for usr, fname, lname, email, cod_del in delegados_data:
-            u, _ = Usuario.objects.get_or_create(
-                username=usr,
-                defaults={
-                    "first_name": fname,
-                    "last_name": lname,
-                    "email": email,
-                    "rol": Usuario.Rol.DELEGADO,
-                    "cargo": cargos["Delegado Municipal"],
-                    "delegacion": dels[cod_del]
-                }
-            )
-            u.set_password("Password123!")
-            u.save()
-            delegados_dict[cod_del] = u
+        del_centro, _ = Usuario.objects.get_or_create(
+            username="delegado_centro",
+            defaults={
+                "first_name": "Delegado",
+                "last_name": "Centro",
+                "email": "delegado.centro@laserena.cl",
+                "rol": Usuario.Rol.DELEGADO,
+                "cargo": cargos["Delegado Municipal"],
+                "delegacion": dels["CEN"]
+            }
+        )
+        del_centro.set_password("Delegado2026!")
+        del_centro.save()
 
-        # Funcionarios en terreno
-        funcionarios_data = [
-            ("carlos.tapia", "Carlos", "Tapia", "Gestor Territorial", "CIA"),
-            ("carlos.terreno.cia", "Carlos", "Tapia", "Gestor Territorial", "CIA"),
-            ("ana.social.cia", "Ana", "Rojas", "Trabajador Social", "CIA"),
-            ("javier.terreno.ant", "Javier", "Morales", "Gestor Territorial", "ANT"),
-            ("patricia.social.ant", "Patricia", "Araya", "Trabajador Social", "ANT"),
-            ("matias.dev", "Matías", "Gómez", "Gestor Territorial", "CIA"),
-        ]
-        funcionarios_dict = {}
-        for usr, fname, lname, c_nom, cod_del in funcionarios_data:
-            u, _ = Usuario.objects.get_or_create(
-                username=usr,
-                defaults={
-                    "first_name": fname,
-                    "last_name": lname,
-                    "email": f"{usr}@laserena.cl",
-                    "rol": Usuario.Rol.FUNCIONARIO,
-                    "cargo": cargos[c_nom],
-                    "delegacion": dels[cod_del]
-                }
-            )
-            u.set_password("Password123!")
-            u.save()
-            funcionarios_dict[usr] = u
+        func_centro, _ = Usuario.objects.get_or_create(
+            username="funcionario_centro",
+            defaults={
+                "first_name": "Funcionario",
+                "last_name": "Centro",
+                "email": "funcionario.centro@laserena.cl",
+                "rol": Usuario.Rol.FUNCIONARIO,
+                "cargo": cargos["Gestor Territorial"],
+                "delegacion": dels["CEN"]
+            }
+        )
+        func_centro.set_password("Func2026!")
+        func_centro.save()
 
         # 4. Periodo de Medición
         periodo, _ = PeriodoMedicion.objects.get_or_create(
@@ -178,11 +153,11 @@ class Command(BaseCommand):
 
         # 7. Tubo de Trabajo (Compromisos Agenda Colectiva)
         compromisos_data = [
-            ("Junta de Vecinos El Brillador", dels["CIA"], funcionarios_dict["carlos.terreno.cia"], datetime.date(2026, 9, 10), "Reparación luminaria plaza principal", CompromisoAgenda.Estado.EN_PROCESO),
-            ("Comité de Adelanto Las Vertientes", dels["CIA"], funcionarios_dict["carlos.terreno.cia"], datetime.date(2026, 8, 20), "Limpieza canal vecinal de regadío", CompromisoAgenda.Estado.REALIZADO),
-            ("Vecina Sector Esmeralda (Anonimizado)", dels["CIA"], funcionarios_dict["ana.social.cia"], datetime.date(2026, 8, 25), "Entrega canasta y pañales adulto mayor", CompromisoAgenda.Estado.REALIZADO),
-            ("Unión Comunal La Antena", dels["ANT"], funcionarios_dict["javier.terreno.ant"], datetime.date(2026, 8, 15), "Inspección de baches en Av. 18 Septiembre", CompromisoAgenda.Estado.PENDIENTE), # Vencido
-            ("Club Adulto Mayor Esperanza", dels["ANT"], funcionarios_dict["patricia.social.ant"], datetime.date(2026, 9, 18), "Taller de postulación Fondo Presidente de la República", CompromisoAgenda.Estado.INGRESADO),
+            ("Junta de Vecinos El Brillador", dels["CEN"], func_centro, datetime.date(2026, 9, 10), "Reparación luminaria plaza principal", CompromisoAgenda.Estado.EN_PROCESO),
+            ("Comité de Adelanto Las Vertientes", dels["CEN"], func_centro, datetime.date(2026, 8, 20), "Limpieza canal vecinal de regadío", CompromisoAgenda.Estado.REALIZADO),
+            ("Vecina Sector Centro", dels["CEN"], func_centro, datetime.date(2026, 8, 25), "Entrega canasta y pañales adulto mayor", CompromisoAgenda.Estado.REALIZADO),
+            ("Unión Comunal La Antena", dels["ANT"], func_centro, datetime.date(2026, 8, 15), "Inspección de baches en Av. 18 Septiembre", CompromisoAgenda.Estado.PENDIENTE), # Vencido
+            ("Club Adulto Mayor Esperanza", dels["ANT"], func_centro, datetime.date(2026, 9, 18), "Taller de postulación Fondo Presidente de la República", CompromisoAgenda.Estado.INGRESADO),
         ]
         for sol, dl, resp, f_comp, desc, est in compromisos_data:
             CompromisoAgenda.objects.get_or_create(
@@ -194,37 +169,37 @@ class Command(BaseCommand):
             )
 
         # 8. Actividades y Evidencias (Códigos únicos alfanuméricos inmutables)
-        # Actividades para Carlos Tapia (Las Compañías)
-        actividades_carlos = [
-            ("Inspección de luminarias Pasaje 3", "Se constata reposición de foco LED N° 4", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.APROBADA, "CIA711", "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"),
-            ("Revisión de bacheo calle México", "Asfaltado en frío completado con cuadrilla", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.APROBADA, "CIA712", "https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80"),
-            ("Inspección microbasural Av. Islón", "Fiscalización y notificación a predio", items_g_objs[0], cat_dict["MED-01"], Evidencia.Estado.APROBADA, "CIA713", "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80"),
-            ("Recepción solicitud vecinal agua potable", "Toma de contacto con directiva rural", items_g_objs[1], cat_dict["TER-01"], Evidencia.Estado.APROBADA, "CIA714", "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80"),
-            ("Audiencia por ruidos molestos", "Mediación entre vecinos pasaje Los Aromos", items_g_objs[1], cat_dict["TER-01"], Evidencia.Estado.PENDIENTE, "CIA715", "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80"),
-            ("Operativo nocturno con Seguridad Ciudadana", "Ronda preventiva en sector Villa El Parque", items_g_objs[0], cat_dict["SEG-01"], Evidencia.Estado.PENDIENTE, "CIA716", "https://images.unsplash.com/photo-1508847154043-be5407fcaa5a?auto=format&fit=crop&w=600&q=80"),
-            ("Reunión directiva JJVV San Bartolomé", "Planificación de actividades de Fiestas Patrias", items_g_objs[2], cat_dict["TER-01"], Evidencia.Estado.APROBADA, "CIA717", "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80"),
-            ("Inspección letrero publicitario riesgoso", "Foto borrosa, no se aprecia numeración de poste", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.RECHAZADA, "CIA718", "https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&w=600&q=80"),
+        # Actividades para Funcionario Centro
+        actividades_centro = [
+            ("Inspección de luminarias Pasaje 3", "Se constata reposición de foco LED N° 4", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.APROBADA, "CEN711", "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"),
+            ("Revisión de bacheo calle México", "Asfaltado en frío completado con cuadrilla", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.APROBADA, "CEN712", "https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80"),
+            ("Inspección microbasural Av. Islón", "Fiscalización y notificación a predio", items_g_objs[0], cat_dict["MED-01"], Evidencia.Estado.APROBADA, "CEN713", "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80"),
+            ("Recepción solicitud vecinal agua potable", "Toma de contacto con directiva rural", items_g_objs[1], cat_dict["TER-01"], Evidencia.Estado.APROBADA, "CEN714", "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80"),
+            ("Audiencia por ruidos molestos", "Mediación entre vecinos pasaje Los Aromos", items_g_objs[1], cat_dict["TER-01"], Evidencia.Estado.PENDIENTE, "CEN715", "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80"),
+            ("Operativo nocturno con Seguridad Ciudadana", "Ronda preventiva en sector Villa El Parque", items_g_objs[0], cat_dict["SEG-01"], Evidencia.Estado.PENDIENTE, "CEN716", "https://images.unsplash.com/photo-1508847154043-be5407fcaa5a?auto=format&fit=crop&w=600&q=80"),
+            ("Reunión directiva JJVV San Bartolomé", "Planificación de actividades de Fiestas Patrias", items_g_objs[2], cat_dict["TER-01"], Evidencia.Estado.APROBADA, "CEN717", "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80"),
+            ("Inspección letrero publicitario riesgoso", "Foto borrosa, no se aprecia numeración de poste", items_g_objs[0], cat_dict["INF-01"], Evidencia.Estado.RECHAZADA, "CEN718", "https://images.unsplash.com/photo-1520072959219-c595dc870360?auto=format&fit=crop&w=600&q=80"),
         ]
 
-        for sol_tit, acc, it_med, cat, est_ev, cod_ev, url_img in actividades_carlos:
+        for sol_tit, acc, it_med, cat, est_ev, cod_ev, url_img in actividades_centro:
             act, created = Actividad.objects.get_or_create(
-                funcionario=funcionarios_dict["carlos.terreno.cia"],
+                funcionario=func_centro,
                 actividad_solicitud=sol_tit,
                 defaults={
-                    "delegacion": dels["CIA"],
+                    "delegacion": dels["CEN"],
                     "item_medicion": it_med,
                     "catalogo_servicio": cat,
                     "accion_ejecutada": acc,
-                    "contacto_nombre": "Vecino Anonimizado CIA",
+                    "contacto_nombre": "Directiva Comunitaria Centro",
                     "contacto_telefono": "+56987654321",
-                    "latitud": -29.8950,
-                    "longitud": -71.2500,
+                    "latitud": -29.9027,
+                    "longitud": -71.2519,
                     "fecha_actividad": datetime.date(2026, 8, 28)
                 }
             )
             if not hasattr(act, 'evidencia'):
                 obs = "Fotografía no nítida. Favor tomar foto desde ángulo frontal." if est_ev == Evidencia.Estado.RECHAZADA else ("Aprobado conforme en terreno." if est_ev == Evidencia.Estado.APROBADA else "")
-                verif = delegados_dict["CIA"] if est_ev in [Evidencia.Estado.APROBADA, Evidencia.Estado.RECHAZADA] else None
+                verif = del_centro if est_ev in [Evidencia.Estado.APROBADA, Evidencia.Estado.RECHAZADA] else None
                 f_val = timezone.now() if verif else None
                 Evidencia.objects.create(
                     actividad=act,
@@ -238,10 +213,10 @@ class Command(BaseCommand):
 
         # 9. Casos Sociales con secuencia de 3 atenciones (RF-015, CA-04)
         caso1, _ = CasoSocial.objects.get_or_create(
-            codigo_caso="CASO-CIA-2026-001",
+            codigo_caso="CASO-CEN-2026-001",
             defaults={
-                "persona_anonimizada": "Usuaria Adulto Mayor Sector El Sauce",
-                "delegacion": dels["CIA"],
+                "persona_anonimizada": "Usuaria Adulto Mayor Sector Balmaceda",
+                "delegacion": dels["CEN"],
                 "fecha_apertura": datetime.date(2026, 8, 10),
                 "cerrado": False
             }
@@ -253,7 +228,7 @@ class Command(BaseCommand):
                 "tipo_atencion": "Diagnóstico y Postulación RSH",
                 "detalle": "Se levanta ficha preliminar con situación de vulnerabilidad habitacional",
                 "resultado": "Ficha aprobada en sistema nacional",
-                "funcionario": funcionarios_dict["ana.social.cia"]
+                "funcionario": func_centro
             }
         )
         AtencionSocial.objects.get_or_create(
@@ -263,7 +238,7 @@ class Command(BaseCommand):
                 "tipo_atencion": "Visita Domiciliaria de Verificación",
                 "detalle": "Constatación en terreno de requerimiento de material de techumbre",
                 "resultado": "Informe social derivado a DIDECO central",
-                "funcionario": funcionarios_dict["ana.social.cia"]
+                "funcionario": func_centro
             }
         )
         AtencionSocial.objects.get_or_create(
@@ -273,7 +248,7 @@ class Command(BaseCommand):
                 "tipo_atencion": "Entrega de Materiales y Cierre de Ayuda",
                 "detalle": "Entrega de planchas de zinc y subsidio complementario de alimentos",
                 "resultado": "Caso atendido satisfactoriamente",
-                "funcionario": funcionarios_dict["ana.social.cia"]
+                "funcionario": func_centro
             }
         )
 

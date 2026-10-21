@@ -65,3 +65,7 @@ Thumbs.db
 *.svg
 /Diagrama*.png
 /C00*.png
+
+# Documentos temporales de equipo y notas de trabajo
+kazu_docs/
+REPORTE_REVISION_NOCTURNA.md

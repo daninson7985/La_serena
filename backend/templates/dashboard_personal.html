@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class="d-flex flex-column gap-4">
+  {% if request.user.rol in 'ADMIN,COORDINADOR,DELEGADO' %}
   <!-- Selector de Funcionario (para Coordinador / Delegado) -->
   <div class="card p-3 shadow-sm border-0 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
     <div>
@@ -22,6 +23,7 @@
       </select>
     </form>
   </div>
+  {% endif %}
 
   <!-- Banner de Identidad del Funcionario y Semáforo Personal (Rojo Carmesí La Serena) -->
   <div class="card p-4 p-md-4 border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #680E1D 0%, #8B1528 50%, #A31D33 100%) !important;">
@@ -62,12 +64,17 @@
       </div>
     </div>
 
-    <!-- Botón directo a terreno -->
+    <!-- Botón directo a registro Todo en Uno y terreno -->
     <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
       <small class="text-white opacity-75">* Únicamente actividades con fotos validadas con estado <strong>APROBADA</strong> suman a tu avance.</small>
-      <a href="{% url 'web_terreno' %}" class="btn btn-light btn-sm fw-bold px-3 shadow-sm" style="color: var(--carmesi-la-serena);">
-        <i class="bi bi-camera-fill me-1"></i> Registrar Evidencias de Terreno
-      </a>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-warning btn-sm fw-bold px-3 shadow-sm text-dark d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalRegistroActividad">
+          <i class="bi bi-plus-circle-fill text-danger"></i> + Registrar Actividad Diaria (Todo en Uno)
+        </button>
+        <a href="{% url 'web_terreno' %}" class="btn btn-light btn-sm fw-bold px-3 shadow-sm" style="color: var(--carmesi-la-serena);" title="Modo móvil para levantamiento en terreno con GPS">
+          <i class="bi bi-geo-alt-fill me-1"></i> Modo Móvil GPS
+        </a>
+      </div>
     </div>
   </div>
 
@@ -154,50 +161,56 @@
     </div>
   </div>
 
-  <!-- Segunda Tabla: Historial de Actividades y Evidencias Registradas -->
+  <!-- Segunda Tabla: Historial de Actividades y Evidencias Registradas (Todo en Uno) -->
   <div class="card shadow-sm border-0 overflow-hidden">
-    <div class="card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+    <div class="card-header bg-light p-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
       <div>
         <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
           <i class="bi bi-card-checklist text-danger"></i>
-          Registro de Actividades y Evidencias de Terreno
+          Registro de Actividades y Evidencias Diarias (Pestaña Personal)
         </h5>
-        <small class="text-secondary">Listado detallado de intervenciones ingresadas por el funcionario.</small>
+        <small class="text-secondary">Estructura homologada de la planilla personal: fecha, contacto, ítem a medir, evidencia verificadora y derivación a tubo colectivo.</small>
       </div>
-      <a href="{% url 'web_terreno' %}" class="btn btn-danger btn-sm fw-bold px-3 shadow-xs" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
-        <i class="bi bi-camera-fill me-1"></i> Nueva Evidencia
-      </a>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-danger btn-sm fw-bold px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalRegistroActividad" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
+          <i class="bi bi-plus-circle-fill"></i> + Registrar Actividad Diaria
+        </button>
+        <a href="{% url 'web_terreno' %}" class="btn btn-outline-secondary btn-sm" title="Modo móvil para levantamiento en terreno con GPS">
+          <i class="bi bi-phone me-1"></i> Móvil GPS
+        </a>
+      </div>
     </div>
 
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0 small">
         <thead class="bg-light text-secondary text-uppercase border-bottom" style="font-size: 0.75rem; letter-spacing: 0.05rem;">
           <tr>
-            <th class="ps-4 pe-3 py-3" style="min-width: 110px;">Fecha</th>
-            <th class="px-3 py-3" style="min-width: 180px;">Ubicación / Dirección</th>
-            <th class="px-3 py-3" style="min-width: 220px;">Tarea / Ítem</th>
-            <th class="px-3 py-3 text-center" style="min-width: 140px;">Evidencia Fotográfica</th>
-            <th class="text-center px-3 py-3" style="min-width: 140px;">Estado "Check"</th>
-            <th class="text-end ps-3 pe-4 py-3" style="min-width: 120px;">Código</th>
+            <th class="ps-4 pe-2 py-3" style="min-width: 105px;">Fecha Actividad</th>
+            <th class="px-2 py-3" style="min-width: 140px;">Contacto / Vecino</th>
+            <th class="px-2 py-3" style="min-width: 180px;">Ítem a Medir</th>
+            <th class="px-2 py-3" style="min-width: 220px;">Problema y Acción Realizada</th>
+            <th class="px-2 py-3 text-center" style="min-width: 120px;">Verificador (Foto)</th>
+            <th class="text-center px-2 py-3" style="min-width: 120px;">Punto Validado (Check)</th>
+            <th class="text-center px-2 py-3" style="min-width: 130px;">Tubo de Trabajo</th>
+            <th class="text-end ps-2 pe-4 py-3" style="min-width: 90px;">Acción</th>
           </tr>
         </thead>
         <tbody>
           {% for act in actividades %}
             <tr>
-              <td class="ps-4 pe-3 py-3 text-nowrap">
+              <td class="ps-4 pe-2 py-3 text-nowrap">
                 <div class="fw-bold text-dark">{{ act.fecha_actividad|date:"d/m/Y" }}</div>
-                <small class="text-secondary">{{ act.fecha_registro|date:"H:i" }} hrs</small>
+                <small class="text-secondary font-monospace">{{ act.fecha_registro|date:"H:i" }} hrs</small>
               </td>
-              <td class="px-3 py-3">
-                <div class="text-dark fw-semibold">
-                  <i class="bi bi-geo-alt-fill text-danger me-1"></i>
-                  {{ act.direccion|default:act.actividad_solicitud }}
+              <td class="px-2 py-3">
+                <div class="fw-bold text-dark text-truncate" style="max-width: 150px;" title="{{ act.contacto_nombre|default:act.solicitante }}">
+                  {{ act.contacto_nombre|default:act.solicitante|default:"Vecino La Serena" }}
                 </div>
-                {% if act.accion_ejecutada %}
-                  <small class="text-secondary d-block text-truncate" style="max-width: 280px;">{{ act.accion_ejecutada }}</small>
+                {% if act.contacto_telefono %}
+                  <small class="text-secondary d-block font-monospace"><i class="bi bi-telephone-fill me-1" style="font-size: 0.7rem;"></i>{{ act.contacto_telefono }}</small>
                 {% endif %}
               </td>
-              <td class="px-3 py-3">
+              <td class="px-2 py-3">
                 <span class="badge bg-light text-dark border mb-1">
                   {{ act.item_medicion.nombre_item|default:"Actividad General" }}
                 </span>
@@ -205,21 +218,30 @@
                   <small class="text-secondary d-block" style="font-size: 0.72rem;">Ponderador: {{ act.item_medicion.ponderador }}%</small>
                 {% endif %}
               </td>
-              <td class="px-3 py-3 text-center">
+              <td class="px-2 py-3">
+                <div class="text-dark fw-semibold text-truncate" style="max-width: 260px;" title="{{ act.actividad_solicitud|default:act.solicitud_problema }}">
+                  {{ act.actividad_solicitud|default:act.solicitud_problema|default:"Atención vecinal" }}
+                </div>
+                {% if act.accion_ejecutada %}
+                  <small class="text-secondary d-block text-truncate" style="max-width: 260px;" title="{{ act.accion_ejecutada }}">
+                    <i class="bi bi-arrow-right-short text-danger"></i> {{ act.accion_ejecutada }}
+                  </small>
+                {% endif %}
+                <small class="text-muted d-block text-truncate" style="font-size: 0.72rem; max-width: 260px;" title="{{ act.direccion }}">
+                  <i class="bi bi-geo-alt text-danger me-1"></i> {{ act.direccion|default:"La Serena" }}
+                </small>
+              </td>
+              <td class="px-2 py-3 text-center">
                 {% if act.evidencia %}
-                  <div class="d-inline-flex align-items-center gap-1">
-                    <img src="{{ act.evidencia.get_foto_url }}" class="rounded border shadow-xs" style="width: 42px; height: 42px; object-fit: cover;" alt="Foto">
-                    {% if act.evidencia.fotos_adicionales %}
-                      <span class="badge bg-secondary-subtle text-secondary border" title="{{ act.evidencia.fotos_adicionales|length }} fotos adicionales">
-                        +{{ act.evidencia.fotos_adicionales|length }}
-                      </span>
-                    {% endif %}
+                  <div class="d-inline-flex flex-column align-items-center gap-1">
+                    <img src="{{ act.evidencia.get_foto_url }}" class="rounded border shadow-xs" style="width: 44px; height: 44px; object-fit: cover; cursor: pointer;" alt="Foto" onerror="this.onerror=null; this.src='/static/img/evidencia_terreno_placeholder.svg';" onclick="abrirModalFoto('{{ act.evidencia.get_foto_url }}', '{{ act.evidencia.codigo_verificador }}', '{{ act.evidencia.get_estado_display }}', '{{ act.item_medicion.nombre_item|default:'Actividad' }}')" title="Clic para ampliar fotografía">
+                    <span class="font-monospace text-secondary fw-bold" style="font-size: 0.68rem;">{{ act.evidencia.codigo_verificador }}</span>
                   </div>
                 {% else %}
                   <span class="text-secondary small">Sin foto</span>
                 {% endif %}
               </td>
-              <td class="text-center px-3 py-3">
+              <td class="text-center px-2 py-3">
                 {% if act.evidencia %}
                   {% if act.evidencia.estado == 'APROBADA' %}
                     <span class="badge bg-success-subtle text-success border border-success fw-bold px-2 py-1">
@@ -238,19 +260,34 @@
                   <span class="badge bg-secondary text-white">N/A</span>
                 {% endif %}
               </td>
-              <td class="text-end ps-3 pe-4 py-3 font-monospace text-secondary fw-semibold">
-                {{ act.evidencia.codigo_verificador|default:"-" }}
+              <td class="text-center px-2 py-3">
+                {% if act.compromiso_agenda %}
+                  <a href="{% url 'web_tubo' %}?delegacion_id={{ act.delegacion_id }}#compromiso-{{ act.compromiso_agenda.id }}" class="badge bg-danger-subtle text-danger border border-danger text-decoration-none px-2 py-1 d-inline-block" title="Ver en Tubo de Trabajo colectivo">
+                    <i class="bi bi-link-45deg"></i> #{{ act.compromiso_agenda.id }} {{ act.compromiso_agenda.get_estado_display }}
+                  </a>
+                {% else %}
+                  <span class="text-muted small">-</span>
+                {% endif %}
+              </td>
+              <td class="text-end ps-2 pe-4 py-3">
+                {% if act.evidencia %}
+                  <button type="button" class="btn btn-outline-secondary btn-sm p-1" onclick="abrirModalFoto('{{ act.evidencia.get_foto_url }}', '{{ act.evidencia.codigo_verificador }}', '{{ act.evidencia.get_estado_display }}', '{{ act.item_medicion.nombre_item|default:'Actividad' }}')" title="Ver evidencia completa">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" class="text-center text-secondary py-4">
+              <td colspan="8" class="text-center text-secondary py-4">
                 <i class="bi bi-inbox fs-3 d-block text-muted mb-2"></i>
                 No hay actividades registradas por este funcionario en el período.
                 <div class="mt-2">
-                  <a href="{% url 'web_terreno' %}" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-plus-circle me-1"></i> Registrar la primera actividad
-                  </a>
+                  <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegistroActividad">
+                    <i class="bi bi-plus-circle me-1"></i> Registrar la primera actividad (Todo en Uno)
+                  </button>
                 </div>
               </td>
             </tr>
@@ -299,7 +336,7 @@
       <div class="card p-4 h-100 shadow-sm border-0">
         <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-clock-history text-success"></i>
-          Actividad y Frecuencia de Uso (RF-030)
+          Actividad y Frecuencia de Uso
         </h6>
         <div class="space-y-2 small text-secondary">
           <div class="d-flex justify-content-between py-2 border-bottom">
@@ -321,4 +358,270 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Ventana de Registro de Actividad Diaria (Todo en Uno: Actividad + Evidencia + Compromiso) -->
+<div class="modal fade" id="modalRegistroActividad" tabindex="-1" aria-labelledby="modalRegistroActividadLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <form method="POST" action="{% url 'web_registrar_actividad_personal' %}" enctype="multipart/form-data" class="modal-content border-0 shadow-lg" style="max-height: 90vh;">
+      {% csrf_token %}
+      <input type="hidden" name="funcionario_id" value="{{ funcionario.id }}">
+
+      <div class="modal-header text-white flex-shrink-0" style="background: linear-gradient(135deg, #680E1D 0%, #8B1528 100%);">
+        <div>
+          <h5 class="modal-title fw-bold" id="modalRegistroActividadLabel">
+            <i class="bi bi-journal-plus me-2"></i>Ventana Personal de Registro de Actividad
+          </h5>
+          <small class="text-white-50">Registro Todo en Uno: Actividad Diaria + Evidencia Fotográfica + Compromiso en Tubo de Trabajo</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light" style="overflow-y: auto; max-height: calc(90vh - 135px);">
+        <!-- SECCIÓN 1: DATOS DE LA ACTIVIDAD -->
+        <div class="card p-3 mb-3 border-0 shadow-sm bg-white">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="badge px-2 py-1 fw-bold text-white rounded-circle" style="background-color: var(--carmesi-la-serena); width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+            <div>
+              <h6 class="fw-bold text-dark mb-0">Datos de la Actividad Municipal</h6>
+              <small class="text-secondary">Fecha de atención, ítem a medir y detalle de la solicitud vecinal</small>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-5">
+              <label class="form-label small fw-bold text-dark mb-1">Fecha de la Actividad <span class="text-danger">*</span></label>
+              <input type="date" name="fecha_actividad" id="inpFechaActividad" class="form-control form-control-sm fw-semibold" value="{{ hoy|date:'Y-m-d' }}" min="2025-01-01" max="{{ hoy|date:'Y-m-d' }}" onchange="validarFechaNoFutura(this)" required>
+              <div id="fechaErrorMsg" class="text-danger small mt-1 d-none" style="font-size: 0.72rem;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>La fecha no puede ser futura ni superar el día de hoy.
+              </div>
+            </div>
+            <div class="col-12 col-md-7">
+              <label class="form-label small fw-bold text-dark mb-1">Ítem a Medir / Función del Cargo <span class="text-danger">*</span></label>
+              <select name="item_medicion_id" class="form-select form-select-sm fw-semibold" required>
+                {% for it in items_funcionario %}
+                  <option value="{{ it.id }}">
+                    {{ it.nombre_item }} (Ponderador: {{ it.ponderador }}% | Meta: {{ it.meta_cuantitativa }})
+                  </option>
+                {% empty %}
+                  <option value="">Atención General de Terreno</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark mb-1">Contacto / Solicitante / Vecino <span class="text-danger">*</span></label>
+              <input type="text" name="contacto_nombre" class="form-control form-control-sm" placeholder="Ej: JJ.VV. Villa El Romero / Sra. Rosa Pizarro" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark mb-1">Teléfono o Vía de Contacto (Opcional)</label>
+              <input type="text" name="contacto_telefono" class="form-control form-control-sm" placeholder="Ej: +56 9 9876 5432">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark mb-1">Ubicación / Dirección en La Serena <span class="text-danger">*</span></label>
+              <input type="text" name="direccion" class="form-control form-control-sm" placeholder="Ej: Pasaje Los Aromos 345, La Antena" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark mb-1">Problema / Solicitud Detectada <span class="text-danger">*</span></label>
+              <input type="text" name="solicitud_problema" class="form-control form-control-sm" placeholder="Ej: Falla en luminarias y poda preventiva de árboles en multicancha" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark mb-1">Acción Ejecutada por el Funcionario <span class="text-danger">*</span></label>
+              <textarea name="accion_ejecutada" class="form-control form-control-sm" rows="2" placeholder="Ej: Se acude a terreno, se inspecciona el estado con la directiva vecinal..." required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: EVIDENCIA FOTOGRÁFICA Y CÓDIGO VERIFICADOR -->
+        <div class="card p-3 mb-3 border-0 shadow-sm bg-white">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="badge px-2 py-1 fw-bold text-white rounded-circle" style="background-color: var(--carmesi-la-serena); width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+            <div>
+              <h6 class="fw-bold text-dark mb-0">Evidencia Fotográfica de Respaldo</h6>
+              <small class="text-secondary">Generación automática de Código Verificador para validación Check</small>
+            </div>
+          </div>
+
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-7">
+              <label class="form-label small fw-bold text-dark mb-1">Subir Fotografía de Terreno / Respaldo</label>
+              <input type="file" name="archivo_foto" id="inpFotoModal" accept="image/*" class="form-control form-control-sm" onchange="previewModalFoto(this)">
+              <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Formatos soportados: JPG, PNG, WEBP (o captura con cámara móvil).</small>
+            </div>
+            <div class="col-12 col-md-5 text-center">
+              <div id="previewContainerModal" class="border rounded p-2 bg-light d-flex flex-column align-items-center justify-content-center" style="height: 110px;">
+                <img id="imgPreviewModal" src="" class="img-fluid rounded d-none" style="max-height: 90px; object-fit: cover;" alt="Vista previa">
+                <span id="txtPreviewPlaceholder" class="text-secondary small">
+                  <i class="bi bi-image fs-3 d-block text-muted"></i> Sin foto seleccionada
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-light border small mt-3 mb-0 py-2 d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-success fs-5"></i>
+            <div>
+              Al registrar la fecha y guardar, se generará el <strong>Código Verificador oficial</strong> (ej: <code>{{ funcionario.delegacion.codigo|default:'SGR' }}-EVA-...</code>) quedando el punto en estado <strong>"En Revisión"</strong> para validación del Delegado/Jefatura.
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: ¿DERIVA EN COMPROMISO A FUTURO EN TUBO DE TRABAJO? -->
+        <div class="card p-3 border-0 shadow-sm bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge px-2 py-1 fw-bold text-white rounded-circle" style="background-color: var(--carmesi-la-serena); width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+              <div>
+                <h6 class="fw-bold text-dark mb-0">Tubo de Trabajo Colectivo (Agenda a Futuro)</h6>
+                <small class="text-secondary">¿La atención derivó en un compromiso que requiere seguimiento?</small>
+              </div>
+            </div>
+            <div class="form-check form-switch fs-5">
+              <input class="form-check-input" type="checkbox" role="switch" id="switchGeneraCompromiso" name="genera_compromiso" onchange="toggleSeccionCompromiso(this)">
+            </div>
+          </div>
+
+          <div id="seccionCompromisoCollapse" class="d-none mt-2 pt-2">
+            <div class="alert alert-warning py-2 small mb-3 border-warning">
+              <i class="bi bi-exclamation-circle-fill me-1"></i> Este compromiso se vinculará directamente a esta actividad y se sincronizará en la <strong>Agenda Colectiva de la Delegación</strong> ({% url 'web_tubo' %}) donde todo el equipo podrá monitorearlo.
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">Fecha Comprometida de Solución <span class="text-danger">*</span></label>
+                <input type="date" name="compromiso_fecha" id="compFechaInp" class="form-control form-control-sm" min="{{ hoy|date:'Y-m-d' }}" max="2027-12-31">
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">Área o Unidad Municipal de Apoyo <span class="text-danger">*</span></label>
+                <select name="compromiso_area_apoyo" class="form-select form-select-sm">
+                  {% for a in areas_apoyo %}
+                    <option value="{{ a }}">{{ a }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">Estado Inicial en Tubo</label>
+                <select name="compromiso_estado" class="form-select form-select-sm">
+                  <option value="INGRESADO" selected>Ingresado</option>
+                  <option value="PENDIENTE">Pendiente</option>
+                  <option value="EN_PROCESO">En Proceso</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label small fw-bold text-dark mb-1">Origen del Requerimiento</label>
+                <input type="text" class="form-control form-control-sm" value="EXT (Vecinal en Terreno)" readonly>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-bold text-dark mb-1">Detalle del Compromiso con el Vecino <span class="text-danger">*</span></label>
+                <textarea name="compromiso_descripcion" class="form-control form-control-sm" rows="2" placeholder="Detalle qué se comprometió a gestionar o reparar y los plazos acordados..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light p-3 border-top flex-shrink-0 d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-danger btn-sm fw-bold px-4 shadow-sm" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
+          <i class="bi bi-check2-circle me-1"></i> Guardar Registro Completo (Todo en Uno)
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para Visualizar Foto y Verificador Completo -->
+<div class="modal fade" id="modalVerFoto" tabindex="-1" aria-labelledby="modalVerFotoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header p-3 text-white border-0" style="background: linear-gradient(135deg, #680E1D 0%, #8B1528 100%);">
+        <div>
+          <h6 class="modal-title fw-bold mb-0 text-white" id="modalVerFotoLabel">
+            <i class="bi bi-camera-fill me-2 text-warning"></i>Respaldo Fotográfico de Terreno
+          </h6>
+          <small class="text-white-50">Código Verificador: <span id="modalFotoCodigo" class="font-monospace text-warning fw-bold"></span></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-3 text-center bg-light" style="min-height: 320px; display: flex; align-items: center; justify-content: center;">
+        <img id="modalFotoImg" src="/static/img/evidencia_terreno_placeholder.svg" class="img-fluid rounded border shadow-sm" style="max-height: 480px; min-height: 260px; width: 100%; object-fit: contain;" alt="Evidencia de terreno" onerror="this.onerror=null; this.src='/static/img/evidencia_terreno_placeholder.svg';">
+      </div>
+      <div class="modal-footer bg-white p-3 border-top d-flex justify-content-between align-items-center">
+        <div class="small">
+          <span class="text-secondary fw-semibold">Ítem:</span> <strong id="modalFotoItem" class="text-dark"></strong> &nbsp;|&nbsp;
+          <span class="text-secondary fw-semibold">Estado Check:</span> <span id="modalFotoEstado" class="badge bg-secondary"></span>
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary px-3 fw-semibold" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function validarFechaNoFutura(inp) {
+    const hoyStr = new Date().toISOString().split('T')[0];
+    const errDiv = document.getElementById('fechaErrorMsg');
+    if (inp.value > hoyStr) {
+      if (errDiv) errDiv.classList.remove('d-none');
+      inp.value = hoyStr;
+      alert('La fecha de la actividad no puede ser posterior a hoy (' + hoyStr + ').');
+    } else if (errDiv) {
+      errDiv.classList.add('d-none');
+    }
+  }
+
+  function toggleSeccionCompromiso(chk) {
+    const sec = document.getElementById('seccionCompromisoCollapse');
+    const compFecha = document.getElementById('compFechaInp');
+    if (chk.checked) {
+      sec.classList.remove('d-none');
+      if (!compFecha.value) {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        compFecha.value = d.toISOString().split('T')[0];
+      }
+    } else {
+      sec.classList.add('d-none');
+    }
+  }
+
+  function previewModalFoto(inp) {
+    if (inp.files && inp.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('imgPreviewModal');
+        const placeholder = document.getElementById('txtPreviewPlaceholder');
+        img.src = e.target.result;
+        img.classList.remove('d-none');
+        placeholder.classList.add('d-none');
+      };
+      reader.readAsDataURL(inp.files[0]);
+    }
+  }
+
+  let modalVerFotoInstance = null;
+  function abrirModalFoto(imgUrl, codigo, estado, item) {
+    const imgEl = document.getElementById('modalFotoImg');
+    imgEl.onerror = function() {
+      this.onerror = null;
+      this.src = '/static/img/evidencia_terreno_placeholder.svg';
+    };
+    imgEl.src = imgUrl || '/static/img/evidencia_terreno_placeholder.svg';
+    document.getElementById('modalFotoCodigo').textContent = codigo || 'SGR-FOTO';
+    document.getElementById('modalFotoEstado').textContent = estado || 'En Revisión';
+    document.getElementById('modalFotoItem').textContent = item || 'Actividad';
+
+    const modalEl = document.getElementById('modalVerFoto');
+    if (!modalVerFotoInstance) {
+      modalVerFotoInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+    }
+    modalVerFotoInstance.show();
+  }
+</script>
 {% endblock %}

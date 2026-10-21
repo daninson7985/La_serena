@@ -227,7 +227,7 @@ class ActividadViewSet(viewsets.ModelViewSet):
     serializer_class = ActividadSerializer
 
     def get_queryset(self):
-        qs = Actividad.objects.all().select_related('funcionario', 'delegacion', 'item_medicion', 'evidencia')
+        qs = Actividad.objects.all().select_related('funcionario', 'delegacion', 'item_medicion', 'compromiso_agenda').prefetch_related('evidencias')
         delegacion_id = self.request.query_params.get('delegacion')
         funcionario_id = self.request.query_params.get('funcionario')
         fecha_desde = self.request.query_params.get('fecha_desde')
@@ -373,7 +373,7 @@ class MetricasAPIView(APIView):
         if periodo_id:
             periodo = PeriodoMedicion.objects.filter(id=periodo_id).first()
         else:
-            periodo = PeriodoMedicion.objects.filter(cerrado=False).first() or PeriodoMedicion.objects.first()
+            periodo = PeriodoMedicion.objects.filter(cerrado=False).order_by('-fecha_inicio', '-id').first() or PeriodoMedicion.objects.order_by('-fecha_inicio', '-id').first()
 
         if not periodo:
             return Response({'error': 'No hay períodos de medición registrados.'}, status=status.HTTP_404_NOT_FOUND)

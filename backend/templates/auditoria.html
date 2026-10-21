@@ -5,9 +5,9 @@
   <div class="card p-4 shadow-sm border-0">
     <div class="d-flex align-items-center gap-2 mb-1">
       <span class="badge bg-secondary text-uppercase fw-bold">Seguridad & Trazabilidad</span>
-      <span class="text-secondary small">RF-036, RNF-008, Historia HU-30</span>
+      <span class="text-secondary small">Control de Integridad y Trazabilidad Municipal</span>
     </div>
-    <h3 class="fw-black mb-0 text-light">Registro Inmutable de Auditoría</h3>
+    <h3 class="fw-black mb-0 text-dark">Registro Inmutable de Auditoría</h3>
     <small class="text-secondary">Historial detallado de todas las operaciones críticas: usuario, acción, fecha, valores anteriores y nuevos.</small>
   </div>
   <div class="card border-0 shadow-sm overflow-hidden">
@@ -30,7 +30,7 @@
               <td class="ps-3 text-secondary font-monospace">{{ r.fecha|date:"d/m/Y H:i:s" }}</td>
               <td class="fw-bold text-light">{{ r.usuario.get_full_name|default:r.usuario.username|default:"Sistema" }}</td>
               <td>
-                <span class="badge {% if r.accion == 'CREAR' %}bg-success{% elif r.accion == 'VALIDAR_EVIDENCIA' %}bg-info text-dark{% elif r.accion == 'CAMBIO_ESTADO' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                <span class="badge {% if r.accion == 'CREAR' %}bg-success{% elif r.accion == 'VALIDAR_EVIDENCIA' %}bg-light text-dark border{% elif r.accion == 'CAMBIO_ESTADO' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
                   {{ r.accion }}
                 </span>
               </td>

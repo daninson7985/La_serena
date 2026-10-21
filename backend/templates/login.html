@@ -23,21 +23,24 @@
         {% endif %}
 
         {% if show_2fa %}
-          <!-- Paso 2FA para Rodrigo -->
+          <!-- Paso 2FA para Rodrigo / Funcionarios con 2FA -->
           <form method="POST" action="{% url 'web_verificar_2fa' %}">
             {% csrf_token %}
             <input type="hidden" name="user_id" value="{{ user_id }}">
-            <div class="text-center p-3 bg-light border rounded mb-3">
-              <i class="bi bi-key-fill text-danger fs-3"></i>
-              <h6 class="fw-bold mt-1 text-dark">Autenticación de Dos Factores (2FA)</h6>
-              <p class="text-secondary small mb-0">Ingrese su código numérico temporal (código de prueba: <strong>123456</strong>)</p>
+            <div class="text-center p-3 bg-light border border-danger-subtle rounded-3 mb-3">
+              <i class="bi bi-shield-lock text-danger fs-2"></i>
+              <h6 class="fw-bold mt-2 text-dark">Autenticación de Dos Factores (2FA)</h6>
+              <p class="text-secondary small mb-0">Ingrese el código numérico de seguridad generado por su aplicación autenticadora.</p>
             </div>
             <div class="mb-3">
-              <input type="text" name="code" class="form-control form-control-lg text-center font-monospace fw-bold fs-4" placeholder="000000" maxlength="6" required autofocus>
+              <input type="text" name="code" class="form-control form-control-lg text-center font-monospace fw-bold fs-4" placeholder="000000" maxlength="6" required autofocus autocomplete="one-time-code">
             </div>
             <button type="submit" class="btn btn-danger w-100 fw-bold py-2 shadow-sm">
               <i class="bi bi-check-circle me-1"></i> Confirmar Código 2FA
             </button>
+            <a href="{% url 'web_login' %}" class="btn btn-sm btn-link text-muted mt-2 d-block text-center text-decoration-none small">
+              <i class="bi bi-arrow-left"></i> Volver a usuario y contraseña
+            </a>
           </form>
         {% else %}
           <form method="POST" action="{% url 'web_login' %}">
@@ -46,7 +49,7 @@
               <label class="form-label text-uppercase fw-bold small text-secondary">Usuario Institucional</label>
               <div class="input-group">
                 <span class="input-group-text bg-light border-secondary-subtle"><i class="bi bi-person text-secondary"></i></span>
-                <input type="text" name="username" id="inp-usr" class="form-control border-secondary-subtle" required placeholder="ej. pablo.cuadra">
+                <input type="text" name="username" id="inp-usr" value="{{ username_val|default:'' }}" class="form-control border-secondary-subtle" required placeholder="ej. pablo.cuadra">
               </div>
             </div>
 
@@ -58,26 +61,11 @@
               </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="check2fa" name="requires_2fa">
-                <label class="form-check-label small text-secondary" for="check2fa">Verificación 2FA</label>
-              </div>
-              <span class="badge bg-light text-secondary border small">Acceso Seguro</span>
-            </div>
-
-            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold text-uppercase shadow-sm" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
+            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold text-uppercase shadow-sm mt-2" style="background-color: var(--carmesi-la-serena); border-color: var(--carmesi-la-serena);">
               <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
             </button>
           </form>
         {% endif %}
-      </div>
-      
-      <!-- Footer sutil institucional -->
-      <div class="card-footer bg-light text-center py-3 border-0">
-        <small class="text-muted" style="font-size: 0.78rem;">
-          <i class="bi bi-shield-lock-fill text-danger me-1"></i> Plataforma Oficial de Gestión Territorial • I. Municipalidad de La Serena
-        </small>
       </div>
     </div>
   </div>

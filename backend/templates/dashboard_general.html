@@ -15,19 +15,31 @@
         <small class="text-secondary">Monitoreo transversal de indicadores, cálculo de semáforo diario y alertas operativas.</small>
       </div>
 
-      <!-- Filtro Delegación -->
-      <form method="GET" class="d-flex align-items-center gap-2 bg-white p-2 rounded border shadow-sm">
-        <i class="bi bi-funnel text-danger"></i>
-        <label class="small fw-bold text-secondary text-uppercase mb-0">Delegación:</label>
-        <select name="delegacion_id" class="form-select form-select-sm bg-white text-dark border-0 fw-semibold" onchange="this.form.submit()">
-          <option value="" {% if not delegacion_seleccionada %}selected{% endif %}>Todas las Delegaciones (6)</option>
-          {% for d in delegaciones %}
-            <option value="{{ d.id }}" {% if delegacion_seleccionada == d.id %}selected{% endif %}>
-              {{ d.nombre }} ({{ d.codigo }})
-            </option>
-          {% endfor %}
-        </select>
-      </form>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="{% url 'web_terreno' %}" class="btn btn-danger btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm">
+          <i class="bi bi-camera-fill"></i> + Registrar en Terreno
+        </a>
+        <a href="{% url 'web_tubo' %}" class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
+          <i class="bi bi-kanban"></i> Tubo de Trabajo
+        </a>
+        <a href="{% url 'web_verificacion' %}" class="btn btn-outline-warning btn-sm fw-semibold d-flex align-items-center gap-1">
+          <i class="bi bi-check2-circle"></i> Bandeja Check
+        </a>
+
+        <!-- Filtro Delegación -->
+        <form method="GET" class="d-flex align-items-center gap-2 bg-white p-1 px-2 rounded border shadow-sm ms-md-2">
+          <i class="bi bi-funnel text-danger"></i>
+          <label class="small fw-bold text-secondary text-uppercase mb-0">Delegación:</label>
+          <select name="delegacion_id" class="form-select form-select-sm bg-white text-dark border-0 fw-semibold" onchange="this.form.submit()">
+            <option value="" {% if not delegacion_seleccionada %}selected{% endif %}>Todas las Delegaciones (6)</option>
+            {% for d in delegaciones %}
+              <option value="{{ d.id }}" {% if delegacion_seleccionada == d.id %}selected{% endif %}>
+                {{ d.nombre }} ({{ d.codigo }})
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -38,7 +50,7 @@
       <div class="card p-3 h-100 shadow-sm">
         <div class="d-flex justify-content-between align-items-start">
           <span class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Cumplimiento Promedio</span>
-          <span class="badge bg-primary-subtle text-primary"><i class="bi bi-graph-up-arrow"></i></span>
+          <span class="badge bg-danger-subtle text-danger"><i class="bi bi-graph-up-arrow"></i></span>
         </div>
         <div class="d-flex align-items-baseline gap-2 mt-2">
           <span class="fs-2 fw-black text-light">{{ promedio_ponderado }}%</span>
@@ -106,9 +118,152 @@
           <small class="text-secondary">en terreno</small>
         </div>
         <div class="mt-2 text-success small fw-semibold">
-          100% datos anonimizados
+          100% gestión territorial en terreno
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN MUNICIPAL: Semáforo y Seguimiento de Avance al Día -->
+  <div class="card p-4 shadow-sm border-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3 pb-3 border-bottom border-secondary">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge text-white fw-bold px-2 py-1" style="background-color: var(--carmesi-la-serena);">
+            <i class="bi bi-traffic-light me-1"></i> Control de Avance al Día
+          </span>
+          <span class="badge bg-secondary font-monospace">Metodología APG Municipal</span>
+        </div>
+        <h4 class="fw-bold mb-0 text-light">Semáforo y Seguimiento de Avance al Día</h4>
+        <small class="text-secondary">Monitoreo proporcional según días transcurridos y umbral mínimo de seguridad (60%).</small>
+        <div class="mt-2">
+          <a href="{% url 'web_semaforo' %}" class="btn btn-sm btn-danger fw-bold shadow-xs">
+            <i class="bi bi-traffic-light me-1"></i> Ver Pantalla Completa: Semáforo al Día &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- Ficha de Parámetros de Control Temporal -->
+      <div class="d-flex flex-wrap gap-2">
+        <div class="bg-black p-2 px-3 rounded border border-secondary text-center">
+          <span class="text-secondary small d-block" style="font-size: 0.7rem;">Días Totales</span>
+          <strong class="text-white">{{ comunal.info_tiempo.dias_totales|default:92 }}</strong>
+        </div>
+        <div class="bg-black p-2 px-3 rounded border border-secondary text-center">
+          <span class="text-secondary small d-block" style="font-size: 0.7rem;">Días Avance</span>
+          <strong class="text-white">{{ comunal.info_tiempo.dias_transcurridos|default:1 }}</strong>
+        </div>
+        <div class="bg-black p-2 px-3 rounded border border-secondary text-center">
+          <span class="text-secondary small d-block" style="font-size: 0.7rem;">% Diario Esperado</span>
+          <strong class="text-white">{{ comunal.info_tiempo.pct_diario_esperado|default:1.09 }}%</strong>
+        </div>
+        <div class="bg-black p-2 px-3 rounded border border-secondary text-center">
+          <span class="text-secondary small d-block" style="font-size: 0.7rem;">Meta al Día</span>
+          <strong class="text-warning">{{ comunal.info_tiempo.meta_esperada_pct|default:1.09 }}%</strong>
+        </div>
+        <div class="bg-black p-2 px-3 rounded border border-secondary text-center">
+          <span class="text-secondary small d-block" style="font-size: 0.7rem;">Umbral 60%</span>
+          <strong class="text-danger">{{ comunal.info_tiempo.umbral_60_dia|default:0.65 }}%</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Seguimiento Diario -->
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="bg-light text-secondary text-uppercase border-bottom" style="font-size: 0.75rem; letter-spacing: 0.05rem;">
+          <tr>
+            <th class="ps-3 py-3" style="min-width: 170px;">Delegación Territorial</th>
+            <th class="py-3" style="min-width: 160px;">Responsable / Delegado</th>
+            <th class="py-3 text-center" style="min-width: 110px;">Objetivo al Día</th>
+            <th class="py-3 text-center text-warning" style="min-width: 100px;">60% (Umbral)</th>
+            <th class="py-3 text-center fw-bold text-dark" style="min-width: 110px;">Avance Real</th>
+            <th class="py-3 text-center" style="min-width: 120px;">Semáforo</th>
+            <th class="py-3 text-center" style="min-width: 110px;">Último Ingreso</th>
+            <th class="py-3 text-center" style="min-width: 90px;">Días Pasados</th>
+            <th class="py-3 text-center" style="min-width: 90px;">N° Ingresos</th>
+            <th class="py-3 text-center pe-3" style="min-width: 110px;">Prom. Diario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for del in comunal.delegaciones %}
+            <tr>
+              <td class="ps-3 py-2">
+                <div class="fw-bold text-dark">{{ del.nombre }}</div>
+                <span class="badge bg-secondary font-monospace">{{ del.codigo }}</span>
+              </td>
+              <td class="py-2">
+                <strong class="text-dark">{{ del.responsable }}</strong>
+              </td>
+              <td class="text-center text-secondary fw-semibold">
+                {{ del.objetivo_al_dia }}%
+              </td>
+              <td class="text-center text-warning fw-semibold">
+                {{ del.umbral_60 }}%
+              </td>
+              <td class="text-center fw-bold fs-6 text-dark">
+                {{ del.promedio_ponderado_pct }}%
+              </td>
+              <td class="text-center">
+                {% if del.semaforo_delegacion == 'VERDE' %}
+                  <span class="badge badge-verde px-2 py-1"><i class="bi bi-circle-fill me-1 small"></i> Verde</span>
+                {% elif del.semaforo_delegacion == 'AMBAR' %}
+                  <span class="badge badge-ambar px-2 py-1"><i class="bi bi-circle-fill me-1 small"></i> Ámbar</span>
+                {% else %}
+                  <span class="badge badge-rojo px-2 py-1"><i class="bi bi-circle-fill me-1 small"></i> Rojo</span>
+                {% endif %}
+              </td>
+              <td class="text-center text-secondary">
+                {% if del.ultimo_ingreso %}
+                  <span class="font-monospace">{{ del.ultimo_ingreso|date:"d/m/Y" }}</span>
+                {% else %}
+                  <span class="text-secondary opacity-50">Sin ingresos</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if del.dias_pasados_ultimo_ingreso != None %}
+                  {% if del.dias_pasados_ultimo_ingreso == 0 %}
+                    <span class="badge bg-success-subtle text-success">Hoy</span>
+                  {% else %}
+                    <span class="badge {% if del.dias_pasados_ultimo_ingreso > 2 %}bg-warning-subtle text-dark fw-bold{% else %}bg-light text-secondary{% endif %}">
+                      {{ del.dias_pasados_ultimo_ingreso }} d
+                    </span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-secondary">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center fw-bold text-dark">
+                {{ del.total_ingresos }}
+              </td>
+              <td class="text-center pe-3 font-monospace">
+                {{ del.promedio_ingresos_diarios }} /día
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light fw-bold border-top border-2">
+          <tr>
+            <td class="ps-3 text-uppercase text-dark" colspan="2">Consolidado Comunal La Serena</td>
+            <td class="text-center text-secondary">{{ comunal.info_tiempo.meta_esperada_pct }}%</td>
+            <td class="text-center text-warning">{{ comunal.info_tiempo.umbral_60_dia }}%</td>
+            <td class="text-center text-dark fs-6">{{ comunal.promedio_comunal_pct }}%</td>
+            <td class="text-center">
+              {% if comunal.semaforo_comunal == 'VERDE' %}
+                <span class="badge badge-verde"><i class="bi bi-circle-fill me-1 small"></i> Verde</span>
+              {% elif comunal.semaforo_comunal == 'AMBAR' %}
+                <span class="badge badge-ambar"><i class="bi bi-circle-fill me-1 small"></i> Ámbar</span>
+              {% else %}
+                <span class="badge badge-rojo"><i class="bi bi-circle-fill me-1 small"></i> Rojo</span>
+              {% endif %}
+            </td>
+            <td class="text-center text-secondary">-</td>
+            <td class="text-center text-secondary">-</td>
+            <td class="text-center text-dark">{{ comunal.total_ingresos_comunales }}</td>
+            <td class="text-center pe-3 font-monospace">-</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
 

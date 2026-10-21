@@ -22,11 +22,17 @@ def calcular_dias_periodo(periodo: PeriodoMedicion, fecha_corte: date = None):
 
     # Meta esperada al día en % (RN-007): (días transcurridos / días totales) * 100
     meta_esperada_dia_pct = round((dias_transcurridos / dias_totales) * 100.0, 2)
+    pct_diario_esperado = round(100.0 / dias_totales, 2)
+    umbral_60_dia = round(meta_esperada_dia_pct * 0.60, 2)
 
     return {
+        'fecha_inicio': periodo.fecha_inicio,
+        'fecha_termino': periodo.fecha_termino,
         'dias_totales': dias_totales,
         'dias_transcurridos': dias_transcurridos,
+        'pct_diario_esperado': pct_diario_esperado,
         'meta_esperada_pct': meta_esperada_dia_pct,
+        'umbral_60_dia': umbral_60_dia,
         'fecha_corte': fecha_corte
     }
 
@@ -204,15 +210,38 @@ def calcular_resumen_delegacion(delegacion: Delegacion, periodo: PeriodoMedicion
         estado=Evidencia.Estado.PENDIENTE
     ).count()
 
+    # Datos del Delegado y estadísticas de ingreso en terreno
+    delegado = Usuario.objects.filter(delegacion=delegacion, rol=Usuario.Rol.DELEGADO, is_active=True).first()
+    nombre_responsable = delegado.get_full_name() if (delegado and delegado.get_full_name()) else (delegado.username if delegado else f"Delegado(a) {delegacion.nombre}")
+
+    corte = fecha_corte or timezone.now().date()
+    acts_delegacion = Actividad.objects.filter(
+        delegacion=delegacion,
+        fecha_actividad__gte=periodo.fecha_inicio,
+        fecha_actividad__lte=min(corte, periodo.fecha_termino)
+    )
+    total_ingresos = acts_delegacion.count()
+    ultima_act = acts_delegacion.order_by('-fecha_actividad').first()
+    fecha_ultimo_ingreso = ultima_act.fecha_actividad if ultima_act else None
+    dias_pasados = (timezone.now().date() - fecha_ultimo_ingreso).days if fecha_ultimo_ingreso else None
+    promedio_ingresos_diarios = round(total_ingresos / max(info_tiempo['dias_transcurridos'], 1), 2)
+
     return {
         'delegacion_id': delegacion.id,
         'nombre': delegacion.nombre,
         'codigo': delegacion.codigo,
+        'responsable': nombre_responsable,
         'periodo_nombre': periodo.nombre,
         'meta_esperada_pct': info_tiempo['meta_esperada_pct'],
+        'objetivo_al_dia': info_tiempo['meta_esperada_pct'],
+        'umbral_60': info_tiempo['umbral_60_dia'],
         'promedio_ponderado_pct': promedio_ponderado,
         'semaforo_delegacion': semaforo_delegacion,
         'total_funcionarios': total_f,
+        'total_ingresos': total_ingresos,
+        'ultimo_ingreso': fecha_ultimo_ingreso,
+        'dias_pasados_ultimo_ingreso': dias_pasados,
+        'promedio_ingresos_diarios': promedio_ingresos_diarios,
         'distribucion_semaforo': {
             'verde': conteo_verde,
             'ambar': conteo_ambar,
@@ -243,13 +272,16 @@ def calcular_resumen_comunal(periodo: PeriodoMedicion, fecha_corte: date = None)
 
     total_evidencias_pendientes = sum(r['evidencias_pendientes_check'] for r in resumenes)
     total_compromisos_vencidos = sum(r['compromisos']['vencidos'] for r in resumenes)
+    total_ingresos_comunales = sum(r['total_ingresos'] for r in resumenes)
 
     return {
         'periodo_nombre': periodo.nombre,
+        'info_tiempo': info_tiempo,
         'meta_esperada_pct': info_tiempo['meta_esperada_pct'],
         'promedio_comunal_pct': promedio_comunal,
         'semaforo_comunal': semaforo_comunal,
         'total_evidencias_pendientes': total_evidencias_pendientes,
         'total_compromisos_vencidos': total_compromisos_vencidos,
+        'total_ingresos_comunales': total_ingresos_comunales,
         'delegaciones': resumenes
     }

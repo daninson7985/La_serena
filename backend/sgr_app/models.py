@@ -428,6 +428,46 @@ class Usuario(AbstractUser):
 
     registrarActividad = registrar_actividad
 
+    def activar_usuario(self) -> bool:
+        """Activa la cuenta del usuario en el sistema."""
+        self.is_active = True
+        self.save(update_fields=['is_active'])
+        return True
+
+    activarUsuario = activar_usuario
+
+    def desactivar_usuario(self) -> bool:
+        """Desactiva la cuenta del usuario sin eliminar historial de auditoría ni evidencias (Baja lógica)."""
+        self.is_active = False
+        self.save(update_fields=['is_active'])
+        return True
+
+    desactivarUsuario = desactivar_usuario
+
+    def asignar_rol(self, nuevo_rol: str) -> bool:
+        """Asigna un nuevo rol de sistema al usuario."""
+        if nuevo_rol in Usuario.Rol.values:
+            self.rol = nuevo_rol
+            self.save(update_fields=['rol'])
+            return True
+        return False
+
+    asignarRol = asignar_rol
+
+    def asignar_delegacion(self, nueva_delegacion) -> bool:
+        """Asigna o transfiere al usuario a una delegación municipal."""
+        self.delegacion = nueva_delegacion
+        self.save(update_fields=['delegacion'])
+        return True
+
+    asignarDelegacion = asignar_delegacion
+
+    def validar_acceso(self) -> bool:
+        """Verifica si el usuario está activo y no bloqueado."""
+        return self.is_active
+
+    validarAcceso = validar_acceso
+
     def obtenerCumplimientoGeneral(self) -> float:
         """Calcula el porcentaje de cumplimiento promediando el avance de sus metas asociadas."""
         metas = self.metas.all() if hasattr(self, 'metas') and self.metas.exists() else []
@@ -687,6 +727,27 @@ class PeriodoMedicion(models.Model):
 
     cerrarPeriodo = cerrar_periodo
 
+    def reabrir_periodo(self) -> bool:
+        """RN-013: Reabre un período cerrado bajo autorización y auditoría."""
+        self.cerrado = False
+        self.save(update_fields=['cerrado'])
+        return True
+
+    reabrirPeriodo = reabrir_periodo
+
+    def calcular_meta_al_dia(self, fecha_corte=None) -> float:
+        """RN-007: Calcula el porcentaje de avance esperado a la fecha de corte."""
+        from sgr_app.services.calculos import calcular_dias_periodo
+        return calcular_dias_periodo(self, fecha_corte)['meta_esperada_pct']
+
+    calcularMetaAlDia = calcular_meta_al_dia
+
+    def es_fecha_valida(self, fecha) -> bool:
+        """Verifica si una fecha se encuentra dentro de los límites del período."""
+        return self.fecha_inicio <= fecha <= self.fecha_termino
+
+    esFechaValida = es_fecha_valida
+
 
 # =============================================================================
 # CATÁLOGO DE SERVICIOS
@@ -777,6 +838,32 @@ class ItemMedicion(models.Model):
         self.activo = False
         self.save(update_fields=['activo'])
         return True
+
+    def calcular_avance(self, funcionario=None) -> float:
+        """RN-003: Cuenta actividades con evidencia aprobada para este ítem."""
+        from sgr_app.models import Actividad, Evidencia
+        qs = Actividad.objects.filter(item_medicion=self, evidencias__estado=Evidencia.Estado.APROBADA)
+        if funcionario:
+            qs = qs.filter(funcionario=funcionario)
+        return float(qs.distinct().count())
+
+    calcularAvance = calcular_avance
+
+    def calcular_cumplimiento(self, funcionario=None) -> float:
+        """RN-004: % de cumplimiento = (avance / meta) * 100."""
+        if self.meta_cuantitativa <= 0:
+            return 0.0
+        avance = self.calcular_avance(funcionario)
+        return round((avance / self.meta_cuantitativa) * 100.0, 2)
+
+    calcularCumplimiento = calcular_cumplimiento
+
+    def calcular_ponderado(self, funcionario=None) -> float:
+        """RN-005: Cumplimiento ponderado = (% cumplimiento * ponderador) / 100."""
+        c = self.calcular_cumplimiento(funcionario)
+        return round((c * float(self.ponderador)) / 100.0, 2)
+
+    calcularPonderado = calcular_ponderado
 
 
 # =============================================================================
@@ -1066,7 +1153,9 @@ class Evidencia(models.Model):
                 return self.archivo_foto.url
             except Exception:
                 pass
-        return self.url_foto_simulada or 'https://images.unsplash.com/photo-1541888946425-d0fbb1861564?auto=format&fit=crop&w=600&q=80'
+        if self.url_foto_simulada:
+            return self.url_foto_simulada
+        return '/static/img/evidencia_terreno_placeholder.svg'
 
     @property
     def get_foto_url_2(self):
@@ -1085,6 +1174,25 @@ class Evidencia(models.Model):
             except Exception:
                 pass
         return self.url_foto_simulada_3 or ''
+
+    def calcular_sha256(self) -> str:
+        """RN-010: Calcula el hash criptográfico SHA-256 de la evidencia."""
+        import hashlib
+        cadena = f"{self.id}-{self.actividad_id}-{self.codigo_verificador or ''}-{self.fecha_evidencia}"
+        h = hashlib.sha256(cadena.encode('utf-8')).hexdigest()
+        self.hash_sha256 = h
+        return h
+
+    calcularSha256 = calcular_sha256
+
+    def generar_codigo_verificador(self) -> str:
+        """RN-010: Genera código único institucional EVI-AAAA-MM-XXXX."""
+        import uuid
+        code = f"EVI-2026-{uuid.uuid4().hex[:6].upper()}"
+        self.codigo_verificador = code
+        return code
+
+    generarCodigoVerificador = generar_codigo_verificador
 
     @property
     def fotos_adicionales(self):
@@ -1443,6 +1551,33 @@ class CasoSocial(models.Model):
     fecha_apertura = models.DateField(default=timezone.localdate)
     cerrado = models.BooleanField(default=False)
 
+    def registrar_atencion(self, funcionario, tipo_atencion: str, detalle: str, resultado: str):
+        """RN-012: Registra una de las hasta 3 gestiones para este caso social."""
+        etapa_actual = self.atenciones.count() + 1
+        if etapa_actual > 3:
+            raise ValueError("Un caso social no puede registrar más de 3 gestiones asociadas (RN-012).")
+        return AtencionSocial.objects.create(
+            caso=self,
+            etapa=etapa_actual,
+            funcionario=funcionario,
+            tipo_atencion=tipo_atencion,
+            detalle=detalle,
+            resultado=resultado
+        )
+
+    registrarAtencion = registrar_atencion
+
+    def cambiar_estado(self, cerrar: bool) -> bool:
+        self.cerrado = cerrar
+        self.save(update_fields=['cerrado'])
+        return True
+
+    cambiarEstado = cambiar_estado
+
+    class Meta:
+        verbose_name = 'Caso Social'
+        verbose_name_plural = 'Casos Sociales'
+
     def __str__(self):
         return f"Caso Social {self.codigo_caso} - {self.persona_anonimizada}"
 
@@ -1464,6 +1599,8 @@ class AtencionSocial(models.Model):
     class Meta:
         unique_together = ('caso', 'etapa')
         ordering = ['caso', 'etapa']
+        verbose_name = 'Atención Social'
+        verbose_name_plural = 'Atenciones Sociales'
 
     def __str__(self):
         return f"{self.caso.codigo_caso} - Etapa {self.etapa}"
